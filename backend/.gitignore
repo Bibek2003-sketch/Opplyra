@@ -1,0 +1,21 @@
+# Backend environment & secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*secret*
+*credential*
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Database & runtime
+mongo-data/
+data/
+dump/
+

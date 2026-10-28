@@ -6,7 +6,9 @@ import {
   BookmarkCheck,
   BellRing,
   ChevronRight,
-  X
+  X,
+  Home,
+  LogOut
 } from 'lucide-react';
 
 export function Sidebar({
@@ -17,7 +19,9 @@ export function Sidebar({
   onMouseEnter,
   onMouseLeave,
   profile,
-  onOpenProfile
+  onOpenProfile,
+  onNavigateToLanding,
+  onLogout
 }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -98,8 +102,8 @@ export function Sidebar({
           </nav>
         </div>
 
-        {/* Student Profile Card (Glass Surface) */}
-        <div className="p-3.5 border-t border-[rgba(255,255,255,0.10)] bg-[rgba(14,12,21,0.55)]">
+        {/* Student Profile & Auth Controls (Glass Surface) */}
+        <div className="p-3.5 border-t border-[rgba(255,255,255,0.10)] bg-[rgba(14,12,21,0.55)] space-y-2">
           <div
             onClick={onOpenProfile}
             className="group glass-card glass-card-interactive rounded-2xl p-3 cursor-pointer transition-all duration-200 border border-[rgba(255,255,255,0.12)] shadow-glass"
@@ -120,6 +124,32 @@ export function Sidebar({
               </div>
               <ChevronRight className="w-4 h-4 text-[#92899F] group-hover:text-[#A78BFA] transition-colors shrink-0" />
             </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 pt-1 text-xs">
+            <button
+              onClick={() => {
+                if (onClose) onClose();
+                if (onNavigateToLanding) onNavigateToLanding();
+              }}
+              className="flex-1 py-1.5 px-2.5 rounded-xl border border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.03)] text-[#B7B0C7] hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              title="Visit Public Landing Page"
+            >
+              <Home className="w-3.5 h-3.5 text-[#A78BFA]" />
+              <span>Public Home</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (onClose) onClose();
+                if (onLogout) onLogout();
+              }}
+              className="py-1.5 px-2.5 rounded-xl border border-[rgba(255,255,255,0.08)] hover:border-[#FB7185]/40 bg-[rgba(255,255,255,0.03)] text-[#91899F] hover:text-[#FB7185] flex items-center justify-center gap-1 transition-colors cursor-pointer"
+              title="Log Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Log Out</span>
+            </button>
           </div>
         </div>
       </aside>
