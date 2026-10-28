@@ -1,0 +1,19 @@
+{
+  "name": "opplyra-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Opplyra - Student Opportunity Discovery and Verification",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "seed": "node src/seed.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  }
+}
+
