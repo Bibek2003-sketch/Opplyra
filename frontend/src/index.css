@@ -3,15 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --opplyra-bg: #08080D;
-  --opplyra-secondary-black: #0D0B13;
-  --opplyra-glass: rgba(14, 12, 21, 0.55);
-  --opplyra-glass-elevated: rgba(22, 18, 31, 0.62);
-  --opplyra-border-subtle: rgba(255, 255, 255, 0.12);
-  --opplyra-border-violet: rgba(167, 139, 250, 0.18);
+  --opplyra-bg: #0B0A10;
+  --opplyra-secondary-black: #15121C;
+  --opplyra-surface: #15121C;
+  --opplyra-glass: rgba(21, 18, 28, 0.55);
+  --opplyra-glass-elevated: rgba(26, 22, 35, 0.65);
+  --opplyra-border-subtle: rgba(255, 255, 255, 0.10);
+  --opplyra-border-violet: rgba(182, 154, 255, 0.18);
+
+  /* Primary Brand Violet & Lavender */
   --opplyra-violet: #7C3AED;
   --opplyra-violet-hover: #6D28D9;
-  --opplyra-lavender: #C4B5FD;
+  --opplyra-lavender: #B69AFF;
+
+  /* Multi-Accent System */
+  --opplyra-scholarship: #38BDF8; /* Scholarship blue */
+  --opplyra-internship: #34D399; /* Internship green */
+  --opplyra-examination: #FBBF24; /* Examination and deadline amber */
+  --opplyra-jobs: #FB7185; /* Jobs and training coral */
+
   --opplyra-text: #F7F5FC;
   --opplyra-text-secondary: #B7B0C7;
   --opplyra-text-muted: #91899F;
@@ -38,7 +48,7 @@
   position: fixed;
   inset: 0;
   z-index: 0;
-  background-color: #08080D;
+  background-color: #0B0A10;
   background-image: url("/images/opplyra-abstract-bg.webp");
   background-size: cover;
   background-position: center;
@@ -46,20 +56,20 @@
   pointer-events: none;
 }
 
-/* Semi-transparent dark overlay so violet light shines through while keeping text crisp */
+/* Semi-transparent dark overlay so violet & blue light shines through while keeping text crisp */
 .app-background-image::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(8, 8, 13, 0.58) 0%,
-    rgba(8, 8, 13, 0.70) 100%
+    rgba(11, 10, 16, 0.60) 0%,
+    rgba(11, 10, 16, 0.76) 100%
   );
 }
 
 .app-background {
-  background-color: #08080D;
+  background-color: #0B0A10;
   min-height: 100vh;
 }
 

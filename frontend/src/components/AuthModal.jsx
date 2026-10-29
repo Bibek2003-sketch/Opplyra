@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, Mail, User, GraduationCap, ArrowRight, Sparkles, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { X, Lock, Mail, User, GraduationCap, ArrowRight, Sparkles, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { api } from '../api/client';
 
-export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuccess, existingProfile }) {
-  if (!isOpen) return null;
-
+export function AuthModal({ isOpen = true, onClose, initialMode = 'register', onAuthSuccess, existingProfile }) {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,33 +12,19 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
   const [academicYear, setAcademicYear] = useState(existingProfile?.academicYear || '3rd Year');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
     setMode(initialMode);
     setError(null);
+    setSuccessMessage(null);
     setShowPassword(false);
   }, [initialMode, isOpen]);
-
-  const handleQuickDemoLogin = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      const demoUser = {
-        fullName: existingProfile?.fullName || 'Priya Sharma',
-        email: 'priya.sharma@college.edu',
-        course: existingProfile?.course || 'B.Tech Computer Science',
-        academicYear: existingProfile?.academicYear || '3rd Year',
-        isDemo: true,
-      };
-      localStorage.setItem('opplyra_auth', JSON.stringify({ isAuthenticated: true, user: demoUser }));
-      setIsLoading(false);
-      onAuthSuccess(demoUser);
-      onClose();
-    }, 400);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
     setIsLoading(true);
 
     try {
@@ -55,47 +39,33 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
           throw new Error('Password must be at least 6 characters.');
         }
 
-        // Update backend profile with registered information
-        const profileUpdate = {
+        await api.register({
+          email: email.trim(),
+          password,
           fullName: fullName.trim(),
           course: course.trim(),
           academicYear: academicYear,
-          email: email.trim(),
-        };
+        });
 
-        try {
-          await api.updateProfile(profileUpdate);
-        } catch (apiErr) {
-          console.warn('Profile sync fallback:', apiErr.message);
-        }
-
-        const newUser = {
-          fullName: fullName.trim(),
-          email: email.trim(),
-          course: course.trim(),
-          academicYear: academicYear,
-          registeredAt: new Date().toISOString(),
-        };
-
-        localStorage.setItem('opplyra_auth', JSON.stringify({ isAuthenticated: true, user: newUser }));
-        onAuthSuccess(newUser);
-        onClose();
+        // Registration requires separate login: Do NOT auto-authenticate or enter dashboard
+        setSuccessMessage('Account created successfully. Please log in to continue.');
+        setMode('login');
+        setPassword('');
       } else {
         // Login mode
         if (!email.trim() || !email.includes('@')) {
-          throw new Error('Please enter your account email.');
+          throw new Error('Please enter your registered email address.');
         }
         if (!password) {
           throw new Error('Please enter your password.');
         }
 
-        const loggedInUser = {
-          fullName: fullName || existingProfile?.fullName || 'Priya Sharma',
+        const res = await api.login({
           email: email.trim(),
-          course: course || existingProfile?.course || 'B.Tech Computer Science',
-          academicYear: academicYear || existingProfile?.academicYear || '3rd Year',
-        };
+          password,
+        });
 
+        const loggedInUser = res.data.user;
         localStorage.setItem('opplyra_auth', JSON.stringify({ isAuthenticated: true, user: loggedInUser }));
         onAuthSuccess(loggedInUser);
         onClose();
@@ -106,6 +76,8 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
       setIsLoading(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-4 text-[#F7F5FC]">
@@ -143,6 +115,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
             onClick={() => {
               setMode('login');
               setError(null);
+              setSuccessMessage(null);
             }}
             className={`flex-1 py-1.5 rounded-lg transition-all text-center cursor-pointer ${
               mode === 'login'
@@ -157,6 +130,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
             onClick={() => {
               setMode('register');
               setError(null);
+              setSuccessMessage(null);
             }}
             className={`flex-1 py-1.5 rounded-lg transition-all text-center cursor-pointer ${
               mode === 'register'
@@ -168,53 +142,75 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
           </button>
         </div>
 
-        {/* Demo Fast Login Shortcut */}
-        <div className="mb-4">
-          <button
-            type="button"
-            onClick={handleQuickDemoLogin}
-            disabled={isLoading}
-            className="w-full py-2 px-3 rounded-xl bg-[rgba(124,58,237,0.15)] hover:bg-[rgba(124,58,237,0.25)] border border-[rgba(167,139,250,0.30)] text-[#C4B5FD] hover:text-white text-xs font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#A78BFA]" />
-            <span>Instant Demo: Continue as Priya Sharma</span>
-          </button>
-        </div>
-
-        <div className="relative flex items-center justify-center mb-4">
-          <div className="border-t border-[rgba(255,255,255,0.08)] w-full" />
-          <span className="bg-[rgba(14,12,21,0.96)] px-3 text-[10px] text-[#91899F] uppercase tracking-wider font-medium">
-            or continue with email
-          </span>
-          <div className="border-t border-[rgba(255,255,255,0.08)] w-full" />
-        </div>
-
-        {error && (
-          <div className="p-3 bg-[#FB7185]/15 border border-[#FB7185]/35 rounded-xl text-xs text-[#FB7185] font-semibold mb-4">
-            {error}
+        {/* Success Alert Banner (e.g. after registration) */}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-emerald-500/15 border border-emerald-500/35 rounded-xl text-xs text-emerald-300 font-semibold flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
+            <span>{successMessage}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+        {/* Error Alert Banner */}
+        {error && (
+          <div className="mb-4 p-3 bg-[#FB7185]/15 border border-[#FB7185]/35 rounded-xl text-xs text-[#FB7185] font-semibold flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           {mode === 'register' && (
-            <div>
-              <label className="block font-semibold text-[#F7F5FC] mb-1">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#91899F]" />
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Priya Sharma"
-                  className="w-full pl-9 pr-3.5 py-2.5 glass-input rounded-xl text-[#F7F5FC] font-medium placeholder-[#91899F]"
-                />
+            <>
+              <div>
+                <label className="block text-xs font-semibold text-[#F7F5FC] mb-1">Full Name</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#91899F]" />
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Priya Sharma"
+                    className="w-full pl-9 pr-3 py-2.5 glass-input rounded-xl text-[#F7F5FC] text-xs font-medium placeholder-[#91899F]"
+                  />
+                </div>
               </div>
-            </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#F7F5FC] mb-1">Course / Major</label>
+                  <div className="relative">
+                    <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#91899F]" />
+                    <input
+                      type="text"
+                      required
+                      value={course}
+                      onChange={(e) => setCourse(e.target.value)}
+                      placeholder="e.g. B.Tech CS"
+                      className="w-full pl-9 pr-3 py-2.5 glass-input rounded-xl text-[#F7F5FC] text-xs font-medium placeholder-[#91899F]"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#F7F5FC] mb-1">Academic Year</label>
+                  <select
+                    value={academicYear}
+                    onChange={(e) => setAcademicYear(e.target.value)}
+                    className="w-full px-3 py-2.5 glass-input rounded-xl text-[#F7F5FC] text-xs font-medium bg-[#14101F]"
+                  >
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                    <option value="Postgraduate">Postgraduate</option>
+                  </select>
+                </div>
+              </div>
+            </>
           )}
 
           <div>
-            <label className="block font-semibold text-[#F7F5FC] mb-1">Email Address</label>
+            <label className="block text-xs font-semibold text-[#F7F5FC] mb-1">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#91899F]" />
               <input
@@ -222,48 +218,16 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@university.edu"
-                className="w-full pl-9 pr-3.5 py-2.5 glass-input rounded-xl text-[#F7F5FC] font-medium placeholder-[#91899F]"
+                placeholder="you@student.edu"
+                className="w-full pl-9 pr-3 py-2.5 glass-input rounded-xl text-[#F7F5FC] text-xs font-medium placeholder-[#91899F]"
               />
             </div>
           </div>
 
-          {mode === 'register' && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-semibold text-[#F7F5FC] mb-1">Course / Major</label>
-                <div className="relative">
-                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#91899F]" />
-                  <input
-                    type="text"
-                    required
-                    value={course}
-                    onChange={(e) => setCourse(e.target.value)}
-                    placeholder="B.Tech, B.Sc, BCA..."
-                    className="w-full pl-9 pr-3 py-2.5 glass-input rounded-xl text-[#F7F5FC] font-medium placeholder-[#91899F]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[#F7F5FC] mb-1">Academic Year</label>
-                <select
-                  value={academicYear}
-                  onChange={(e) => setAcademicYear(e.target.value)}
-                  className="w-full px-3 py-2.5 glass-input rounded-xl text-[#F7F5FC] font-medium cursor-pointer"
-                >
-                  <option value="1st Year" className="bg-[#17141F]">1st Year</option>
-                  <option value="2nd Year" className="bg-[#17141F]">2nd Year</option>
-                  <option value="3rd Year" className="bg-[#17141F]">3rd Year</option>
-                  <option value="4th Year" className="bg-[#17141F]">4th Year</option>
-                  <option value="Graduate" className="bg-[#17141F]">Graduate</option>
-                </select>
-              </div>
-            </div>
-          )}
-
           <div>
-            <label className="block font-semibold text-[#F7F5FC] mb-1">Password</label>
+            <label className="block text-xs font-semibold text-[#F7F5FC] mb-1">
+              {mode === 'register' ? 'Password (minimum 6 characters)' : 'Password'}
+            </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#91899F]" />
               <input
@@ -293,13 +257,13 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer mt-2 disabled:opacity-50"
+            className="w-full py-3 px-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer mt-2 disabled:opacity-50 active:scale-[0.99]"
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <span>{mode === 'login' ? 'Log In to Dashboard' : 'Create Account & Enter'}</span>
+                <span>{mode === 'login' ? 'Log In to Dashboard' : 'Create Account'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
@@ -316,4 +280,3 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
     </div>
   );
 }
-

@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
 import {
   Clock,
-  Calendar,
   X,
-  ExternalLink,
   ChevronRight,
   Bookmark,
   Bell,
   ArrowRight,
   ShieldAlert,
-  Sparkles,
-  CheckCircle2
+  ChevronLeft
 } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 
@@ -54,65 +51,65 @@ export function DeadlinesSidebar({
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm xl:hidden"
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-xs xl:hidden"
         />
       )}
 
-      {/* Right Sidebar Panel */}
+      {/* Right Sidebar Panel: Collapsible on both Desktop and Mobile */}
       <aside
-        className={`fixed top-0 bottom-0 right-0 z-40 w-80 bg-[rgba(13,11,19,0.75)] backdrop-blur-2xl text-[#F7F5FC] flex flex-col justify-between border-l border-[rgba(255,255,255,0.12)] shadow-2xl transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full xl:translate-x-0'
+        className={`fixed top-0 bottom-0 right-0 z-40 w-80 bg-[rgba(13,11,19,0.90)] backdrop-blur-2xl text-[#F7F5FC] flex flex-col justify-between border-l border-white/[0.08] shadow-2xl transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[rgba(255,255,255,0.10)] bg-[rgba(14,12,21,0.55)] backdrop-blur-md">
+        <div className="p-4 sm:p-5 border-b border-white/[0.08] bg-[rgba(14,12,21,0.40)] backdrop-blur-md">
           <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#7C3AED]/20 text-[#C4B5FD] border border-[#7C3AED]/35 flex items-center justify-center shadow-sm">
-                <Clock className="w-4 h-4 text-[#A78BFA]" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-[#FBBF24]/15 text-[#FBBF24] border border-[#FBBF24]/25 flex items-center justify-center">
+                <Clock className="w-3.5 h-3.5 text-[#FBBF24]" />
               </div>
               <div>
                 <h2 className="text-sm font-bold text-[#F7F5FC] tracking-tight font-display">
-                  Upcoming Deadlines
+                  Deadlines
                 </h2>
-                <span className="text-[11px] text-[#B7B0C7]">
+                <span className="text-[11px] text-[#91899F]">
                   {displayedList.length} closing soon
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg text-[#92899F] hover:text-[#F7F5FC] hover:bg-[rgba(22,18,31,0.6)] xl:hidden transition-colors cursor-pointer"
-                aria-label="Close deadlines panel"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+            {/* Desktop & Mobile Collapse Button */}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-[#91899F] hover:text-[#F7F5FC] hover:bg-white/[0.06] transition-colors cursor-pointer"
+              title="Collapse sidebar"
+              aria-label="Collapse deadlines panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Quick Filter: All vs Saved */}
-          <div className="flex items-center p-1 bg-[rgba(10,8,15,0.60)] backdrop-blur-md rounded-xl border border-[rgba(255,255,255,0.10)] text-xs font-semibold">
+          <div className="flex items-center p-0.5 bg-[rgba(10,8,15,0.60)] backdrop-blur-md rounded-xl border border-white/[0.08] text-xs font-semibold">
             <button
               onClick={() => setFilterMode('all')}
-              className={`flex-1 py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
+              className={`flex-1 py-1 px-2 rounded-lg transition-all text-center cursor-pointer ${
                 filterMode === 'all'
-                  ? 'bg-[#7C3AED] text-white shadow-sm font-bold'
-                  : 'text-[#B7B0C7] hover:text-[#F7F5FC]'
+                  ? 'bg-[#7C3AED] text-white shadow-xs font-bold'
+                  : 'text-[#91899F] hover:text-[#F7F5FC]'
               }`}
             >
               All ({allUpcoming.length})
             </button>
             <button
               onClick={() => setFilterMode('saved')}
-              className={`flex-1 py-1.5 px-2 rounded-lg transition-all text-center cursor-pointer ${
+              className={`flex-1 py-1 px-2 rounded-lg transition-all text-center cursor-pointer ${
                 filterMode === 'saved'
-                  ? 'bg-[#7C3AED] text-white shadow-sm font-bold'
-                  : 'text-[#B7B0C7] hover:text-[#F7F5FC]'
+                  ? 'bg-[#7C3AED] text-white shadow-xs font-bold'
+                  : 'text-[#91899F] hover:text-[#F7F5FC]'
               }`}
             >
-              My Saved ({savedItems.length})
+              Saved ({savedItems.length})
             </button>
           </div>
         </div>
@@ -120,22 +117,22 @@ export function DeadlinesSidebar({
         {/* Scrollable Deadlines Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           {displayedList.length === 0 ? (
-            <div className="p-8 text-center glass-card rounded-2xl space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-[rgba(14,12,21,0.7)] text-[#A78BFA] border border-[rgba(255,255,255,0.10)] flex items-center justify-center mx-auto text-base">
+            <div className="p-6 text-center rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2.5">
+              <div className="w-8 h-8 rounded-lg bg-white/[0.04] text-[#A78BFA] flex items-center justify-center mx-auto text-sm">
                 ⏰
               </div>
               <h3 className="text-xs font-bold text-[#F7F5FC]">
-                {filterMode === 'saved' ? 'No saved deadlines yet' : 'No upcoming deadlines'}
+                {filterMode === 'saved' ? 'No saved deadlines' : 'No upcoming deadlines'}
               </h3>
-              <p className="text-[11px] text-[#B7B0C7] leading-relaxed">
+              <p className="text-[11px] text-[#91899F] leading-relaxed">
                 {filterMode === 'saved'
-                  ? 'Save opportunities from the catalogue to see their deadlines here.'
-                  : 'All current opportunities are recorded. Check back for newly announced dates.'}
+                  ? 'Save opportunities to track their deadlines here.'
+                  : 'All recorded deadlines are currently closed.'}
               </p>
               {filterMode === 'saved' && (
                 <button
                   onClick={() => onNavigate('catalogue')}
-                  className="px-3 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                 >
                   Browse Catalogue
                 </button>
@@ -143,29 +140,29 @@ export function DeadlinesSidebar({
             </div>
           ) : (
             <>
-              {/* Nearest Urgency Feature Card */}
+              {/* Nearest Urgency Feature Card: Emphasize closing soonest */}
               {nearestOpp && (
                 <div>
-                  <div className="text-[10px] font-bold text-[#A78BFA] uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span>Closing Soonest</span>
-                    <span className="flex items-center gap-1 text-[#FBBF24]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#FBBF24] animate-ping" />
-                      Priority
+                  <div className="text-[10px] font-bold text-[#FBBF24] uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FBBF24] animate-pulse" />
+                      Closing Soonest
                     </span>
+                    <span className="text-[#91899F] font-medium text-[10px]">Priority</span>
                   </div>
 
-                  <div className="bg-[rgba(22,18,31,0.62)] backdrop-blur-xl border border-[rgba(255,255,255,0.14)] hover:border-[#7C3AED]/40 rounded-2xl p-4 shadow-glass transition-all group relative">
+                  <div className="border-l-2 border-l-[#FBBF24] bg-white/[0.02] hover:bg-white/[0.04] rounded-xl p-3.5 border-t border-r border-b border-white/[0.06] transition-all group">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <StatusBadge status={nearestOpp.category} type="category" />
                       {(() => {
                         const days = getDaysLeft(nearestOpp.deadline);
                         return (
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border ${
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                             days <= 2
                               ? 'bg-[#FB7185]/20 text-[#FB7185] border-[#FB7185]/40'
                               : 'bg-[#FBBF24]/15 text-[#FCD34D] border-[#FBBF24]/35'
                           }`}>
-                            {days === 0 ? 'Closes Today' : days === 1 ? 'Closes Tomorrow' : `${days} days left`}
+                            {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days}d left`}
                           </span>
                         );
                       })()}
@@ -173,19 +170,19 @@ export function DeadlinesSidebar({
 
                     <h3
                       onClick={() => onSelectOpportunity(nearestOpp)}
-                      className="text-xs sm:text-sm font-bold text-[#F7F5FC] group-hover:text-[#C4B5FD] transition-colors cursor-pointer line-clamp-2 leading-snug mb-1 font-display"
+                      className="text-xs sm:text-sm font-bold text-[#F7F5FC] group-hover:text-[#F3E8FF] transition-colors cursor-pointer line-clamp-2 leading-snug mb-1 font-display"
                     >
                       {nearestOpp.title}
                     </h3>
 
-                    <div className="text-[11px] text-[#B7B0C7] truncate mb-3">
+                    <div className="text-[11px] text-[#91899F] truncate mb-2.5">
                       {nearestOpp.organization}
                     </div>
 
-                    <div className="pt-2 border-t border-[rgba(255,255,255,0.10)] flex items-center justify-between gap-2">
+                    <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between gap-2">
                       <button
                         onClick={() => onSelectOpportunity(nearestOpp)}
-                        className="text-[11px] font-semibold text-[#A78BFA] hover:text-[#C4B5FD] flex items-center gap-1 cursor-pointer"
+                        className="text-[11px] font-semibold text-[#B69AFF] hover:text-[#F3E8FF] flex items-center gap-1 cursor-pointer"
                       >
                         <span>View Details</span>
                         <ChevronRight className="w-3 h-3" />
@@ -193,7 +190,7 @@ export function DeadlinesSidebar({
 
                       <button
                         onClick={() => onOpenReminder(nearestOpp)}
-                        className="p-1.5 rounded-lg bg-[rgba(14,12,21,0.7)] text-[#B7B0C7] hover:text-[#F7F5FC] hover:bg-[#7C3AED]/25 transition-colors cursor-pointer"
+                        className="p-1 rounded-lg text-[#91899F] hover:text-[#F7F5FC] hover:bg-[#7C3AED]/20 transition-colors cursor-pointer"
                         title="Set Reminder"
                         aria-label="Set Reminder"
                       >
@@ -204,14 +201,14 @@ export function DeadlinesSidebar({
                 </div>
               )}
 
-              {/* Other Upcoming Deadlines List */}
+              {/* Other Upcoming Deadlines List: Compact Rows with Hairline Dividers */}
               {otherOpps.length > 0 && (
                 <div className="space-y-2">
-                  <div className="text-[10px] font-bold text-[#92899F] uppercase tracking-wider mb-2">
+                  <div className="text-[10px] font-bold text-[#91899F] uppercase tracking-wider mb-1">
                     Following Deadlines ({otherOpps.length})
                   </div>
 
-                  <div className="space-y-2.5">
+                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] divide-y divide-white/[0.05] overflow-hidden">
                     {otherOpps.map((opp) => {
                       const days = getDaysLeft(opp.deadline);
                       const isApproaching = days <= 5;
@@ -220,37 +217,27 @@ export function DeadlinesSidebar({
                       return (
                         <div
                           key={opp._id}
-                          className="glass-card glass-card-interactive rounded-xl p-3 transition-all duration-200 group border border-[rgba(255,255,255,0.10)]"
+                          onClick={() => onSelectOpportunity(opp)}
+                          className="p-3 hover:bg-white/[0.03] transition-colors cursor-pointer group"
                         >
                           <div className="flex items-start justify-between gap-2 mb-1">
-                            <span
-                              onClick={() => onSelectOpportunity(opp)}
-                              className="text-xs font-bold text-[#F7F5FC] group-hover:text-[#C4B5FD] cursor-pointer line-clamp-1 font-display"
-                            >
+                            <span className="text-xs font-semibold text-[#F7F5FC] group-hover:text-[#C4B5FD] line-clamp-1 font-display">
                               {opp.title}
                             </span>
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 border ${
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 border ${
                               isApproaching
                                 ? 'bg-[#FBBF24]/15 text-[#FCD34D] border-[#FBBF24]/30'
-                                : 'bg-[rgba(14,12,21,0.7)] text-[#B7B0C7] border-[rgba(255,255,255,0.08)]'
+                                : 'bg-white/[0.03] text-[#91899F] border-white/[0.06]'
                             }`}>
                               {days === 0 ? 'Today' : `${days}d`}
                             </span>
                           </div>
 
-                          <div className="flex items-center justify-between text-[11px] text-[#92899F]">
-                            <span className="truncate max-w-[140px]">{opp.organization}</span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-[#B7B0C7]">
-                                {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              </span>
-                              <button
-                                onClick={() => onSelectOpportunity(opp)}
-                                className="text-[#A78BFA] hover:text-[#C4B5FD] font-semibold text-[11px] ml-1 cursor-pointer"
-                              >
-                                View →
-                              </button>
-                            </div>
+                          <div className="flex items-center justify-between text-[11px] text-[#91899F]">
+                            <span className="truncate max-w-[150px]">{opp.organization}</span>
+                            <span className="text-[10px] text-[#B7B0C7]">
+                              {dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </span>
                           </div>
                         </div>
                       );
@@ -263,7 +250,7 @@ export function DeadlinesSidebar({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-[rgba(255,255,255,0.10)] bg-[rgba(14,12,21,0.55)] backdrop-blur-md space-y-2.5">
+        <div className="p-4 border-t border-white/[0.08] bg-[rgba(14,12,21,0.40)] backdrop-blur-md space-y-2">
           <button
             onClick={() => {
               onNavigate('reminders');
@@ -280,15 +267,11 @@ export function DeadlinesSidebar({
               onNavigate('verification');
               if (onClose) onClose();
             }}
-            className="w-full py-2 px-3 glass-card glass-card-interactive border border-[rgba(196,181,253,0.18)] text-[#B7B0C7] hover:text-[#F7F5FC] rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full py-2 px-3 rounded-xl border border-white/[0.08] hover:border-white/[0.16] bg-white/[0.02] hover:bg-white/[0.05] text-[#B7B0C7] hover:text-[#F7F5FC] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            <ShieldAlert className="w-3.5 h-3.5 text-[#A78BFA]" />
+            <ShieldAlert className="w-3.5 h-3.5 text-[#B69AFF]" />
             <span>Check an Announcement</span>
           </button>
-
-          <div className="text-[10px] text-[#92899F] text-center pt-1">
-            Deadlines automatically update based on official dates.
-          </div>
         </div>
       </aside>
     </>

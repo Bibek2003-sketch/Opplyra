@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const fs = require('fs');
+const { maskMongoUri } = require('../utils/sanitizeLog');
 
 let dbState = {
   isConnected: false,
@@ -22,8 +23,9 @@ async function connectDB() {
   mongoose.set('strictQuery', false);
 
   for (const uri of candidateUris) {
+    const safeUri = maskMongoUri(uri);
     try {
-      console.log(`[Database] Attempting MongoDB connection to ${uri}...`);
+      console.log(`[Database] Attempting MongoDB connection to ${safeUri}...`);
       await mongoose.connect(uri, {
         serverSelectionTimeoutMS: 2000,
         connectTimeoutMS: 2000,
@@ -32,12 +34,13 @@ async function connectDB() {
       dbState.isConnected = true;
       dbState.mode = 'mongodb';
       dbState.lastError = null;
-      dbState.connectionTarget = uri;
-      console.log(`[Database] Successfully connected to persistent MongoDB via ${uri}`);
+      dbState.connectionTarget = safeUri;
+      console.log(`[Database] Successfully connected to persistent MongoDB via ${safeUri}`);
       break;
     } catch (err) {
-      console.warn(`[Database] Connection to ${uri} failed: ${err.message}`);
-      dbState.lastError = err.message;
+      const safeError = maskMongoUri(err.message);
+      console.warn(`[Database] Connection to ${safeUri} failed: ${safeError}`);
+      dbState.lastError = safeError;
     }
   }
 

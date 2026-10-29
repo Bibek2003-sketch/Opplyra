@@ -8,257 +8,483 @@ import {
   Bell,
   Clock,
   FileEdit,
-  Save
+  Save,
+  Search,
+  Filter,
+  CheckCircle2,
+  Sliders,
+  History,
+  AlertTriangle,
+  ArrowRight,
+  Hash,
+  Sparkles,
+  Inbox,
+  RefreshCw,
 } from 'lucide-react';
 import { StatusBadge } from '../components/StatusBadge';
 
 export function SavedTrackerPage({
-  savedItems,
+  applications = [],
+  summary = null,
   onUpdateStatus,
-  onRemoveSaved,
+  onConfirmSubmission,
+  onDeleteApplication,
   onOpenReminder,
   onSelectOpportunity,
-  onNavigate
+  onNavigate,
+  onOpenPreferences,
+  onRefresh,
+  onOpenPortalError,
 }) {
-  const [selectedStatusFilter, setSelectedStatusFilter] = useState('All');
-  const [editingNotesId, setEditingNotesId] = useState(null);
-  const [tempNotes, setTempNotes] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('updated');
+
+  const handleOpenOfficialPortal = (app) => {
+    const url = app.officialApplicationUrl;
+    if (!url || !/^https?:\/\//i.test(url)) {
+      if (onOpenPortalError) {
+        onOpenPortalError({
+          errorType: 'invalid_url',
+          application: app,
+          opportunityTitle: app.opportunityTitle,
+          organization: app.organization,
+          targetUrl: url,
+          officialHomepageUrl: app.officialHomepageUrl,
+          applicationId: app._id,
+        });
+      }
+      return;
+    }
+
+    if (
+      app.urlVerificationStatus === 'needs_review' ||
+      app.urlVerificationStatus === 'unavailable' ||
+      url.includes('/demo/') ||
+      url.includes('-demo')
+    ) {
+      if (onOpenPortalError) {
+        onOpenPortalError({
+          errorType: 'unverified',
+          application: app,
+          opportunityTitle: app.opportunityTitle,
+          organization: app.organization,
+          targetUrl: url,
+          officialHomepageUrl: app.officialHomepageUrl,
+          applicationId: app._id,
+        });
+      }
+      return;
+    }
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   const statusOptions = [
-    { id: 'All', label: 'All' },
-    { id: 'Interested', label: 'Saved' },
-    { id: 'Preparing', label: 'Planning to Apply' },
-    { id: 'Applied', label: 'Applied' },
-    { id: 'Completed', label: 'Completed' },
+    'All',
+    'Interested',
+    'Application Started',
+    'Applied',
+    'Under Review',
+    'Shortlisted',
+    'Selected / Awarded',
+    'Rejected',
+    'Action Required',
+    'Withdrawn',
   ];
 
-  const filteredItems = savedItems.filter((item) => {
-    if (selectedStatusFilter === 'All') return true;
-    return item.status.toLowerCase() === selectedStatusFilter.toLowerCase();
-  });
+  const typeOptions = [
+    'All',
+    'Scholarships',
+    'Internships',
+    'Competitive Examinations',
+    'Jobs & Training',
+  ];
 
-  const handleStartEditNotes = (item) => {
-    setEditingNotesId(item.opportunityId || item._id);
-    setTempNotes(item.notes || '');
+  // Calculate local fallback summary if server summary is not yet provided
+  const computedSummary = summary || {
+    total: applications.length,
+    submitted: applications.filter((a) => a.status === 'Applied').length,
+    underReview: applications.filter((a) => a.status === 'Under Review').length,
+    shortlisted: applications.filter((a) => ['Shortlisted', 'Selected / Awarded'].includes(a.status)).length,
+    upcomingDeadlines: applications.filter(
+      (a) => a.deadline && new Date(a.deadline) > new Date() && !['Selected / Awarded', 'Rejected', 'Withdrawn'].includes(a.status)
+    ).length,
+    actionRequired: applications.filter((a) => a.status === 'Action Required').length,
   };
 
-  const handleSaveNotes = async (opportunityId, currentStatus) => {
-    await onUpdateStatus(opportunityId, currentStatus, tempNotes);
-    setEditingNotesId(null);
-  };
+  // Filter & Sort
+  const filteredApplications = applications
+    .filter((app) => {
+      if (statusFilter !== 'All' && app.status.toLowerCase() !== statusFilter.toLowerCase()) {
+        return false;
+      }
+      if (typeFilter !== 'All' && app.opportunityType.toLowerCase() !== typeFilter.toLowerCase()) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const titleMatch = (app.opportunityTitle || '').toLowerCase().includes(q);
+        const orgMatch = (app.organization || '').toLowerCase().includes(q);
+        const refMatch = (app.externalReference || '').toLowerCase().includes(q);
+        if (!titleMatch && !orgMatch && !refMatch) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'deadline') {
+        const dateA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+        const dateB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+        return dateA - dateB;
+      }
+      const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return dateB - dateA;
+    });
 
   return (
     <div className="space-y-6 pb-12 text-[#F7F5FC]">
       {/* Header Bar */}
-      <div className="glass-panel rounded-2xl p-6 shadow-glass flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="glass-panel rounded-2xl p-6 shadow-glass flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">
+              Application Tracking System
+            </span>
+            <span className="text-xs text-[#91899F]">•</span>
+            <span className="text-xs text-[#C4B5FD] font-semibold">
+              Single Dashboard for All Your Applications
+            </span>
+          </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#F7F5FC] font-display">
-            My Applications ({savedItems.length})
+            My Applications ({applications.length})
           </h1>
           <p className="text-xs sm:text-sm text-[#B7B0C7] mt-0.5">
-            Organize and track the opportunities you want to apply for
+            Apply via verified official portals, confirm submissions, and track your timeline
           </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={onOpenPreferences}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.12)] text-[#F7F5FC] text-xs font-semibold transition-all cursor-pointer shadow-sm"
+            title="Configure deadline reminders & email notifications"
+          >
+            <Bell className="w-3.5 h-3.5 text-[#A78BFA]" />
+            <span>Reminder Settings</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onNavigate('catalogue')}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+          >
+            <span>Find Opportunities</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Summary Cards Grid (Computed from Actual Database Records) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="glass-card rounded-2xl p-4 border border-[rgba(255,255,255,0.08)] flex flex-col justify-between">
+          <div className="text-[11px] font-medium text-[#91899F] mb-1">Total Tracked</div>
+          <div className="text-2xl font-bold text-white font-display">
+            {computedSummary.total}
+          </div>
+          <div className="text-[10px] text-[#B69AFF] mt-1">In your pipeline</div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 border border-[rgba(255,255,255,0.08)] flex flex-col justify-between">
+          <div className="text-[11px] font-medium text-[#91899F] mb-1">Submitted</div>
+          <div className="text-2xl font-bold text-[#B69AFF] font-display">
+            {computedSummary.submitted}
+          </div>
+          <div className="text-[10px] text-[#B69AFF]/80 mt-1">Confirmed applied</div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 border border-[rgba(255,255,255,0.08)] flex flex-col justify-between">
+          <div className="text-[11px] font-medium text-[#91899F] mb-1">Under Review</div>
+          <div className="text-2xl font-bold text-[#38BDF8] font-display">
+            {computedSummary.underReview}
+          </div>
+          <div className="text-[10px] text-[#38BDF8]/80 mt-1">Being evaluated</div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 border border-[rgba(255,255,255,0.08)] flex flex-col justify-between">
+          <div className="text-[11px] font-medium text-[#91899F] mb-1">Shortlisted</div>
+          <div className="text-2xl font-bold text-[#34D399] font-display">
+            {computedSummary.shortlisted}
+          </div>
+          <div className="text-[10px] text-[#34D399]/80 mt-1">Advancing or awarded</div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 border border-[rgba(255,255,255,0.08)] flex flex-col justify-between">
+          <div className="text-[11px] font-medium text-[#91899F] mb-1">Upcoming Deadlines</div>
+          <div className="text-2xl font-bold text-[#FBBF24] font-display">
+            {computedSummary.upcomingDeadlines}
+          </div>
+          <div className="text-[10px] text-[#FBBF24]/80 mt-1">Closing soon</div>
+        </div>
+
+        <div className="glass-card rounded-2xl p-4 border border-[rgba(255,255,255,0.08)] flex flex-col justify-between">
+          <div className="text-[11px] font-medium text-[#91899F] mb-1">Action Required</div>
+          <div className="text-2xl font-bold text-[#FBBF24] font-display">
+            {computedSummary.actionRequired}
+          </div>
+          <div className="text-[10px] text-[#FBBF24]/80 mt-1">Pending submission</div>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="glass-panel rounded-2xl p-4 space-y-3">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Search Box */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#91899F]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by opportunity title, issuing organization, or reference ID..."
+              className="w-full pl-10 pr-4 py-2 glass-input rounded-xl text-xs text-[#F7F5FC] placeholder-[#91899F]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Category Filter */}
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="px-3 py-2 glass-input rounded-xl text-xs text-[#F7F5FC] bg-[#14101F] font-medium cursor-pointer"
+            >
+              {typeOptions.map((t) => (
+                <option key={t} value={t} className="bg-[#14101F] text-white">
+                  {t === 'All' ? 'All Categories' : t}
+                </option>
+              ))}
+            </select>
+
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 glass-input rounded-xl text-xs text-[#F7F5FC] bg-[#14101F] font-medium cursor-pointer"
+            >
+              <option value="updated" className="bg-[#14101F] text-white">Sort: Recently Updated</option>
+              <option value="deadline" className="bg-[#14101F] text-white">Sort: Nearest Deadline</option>
+            </select>
+          </div>
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold">
-          {statusOptions.map((st) => (
-            <button
-              key={st.id}
-              onClick={() => setSelectedStatusFilter(st.id)}
-              className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition-all duration-200 border cursor-pointer ${
-                selectedStatusFilter === st.id
-                  ? 'bg-[#7C3AED] text-white border-[#7C3AED] shadow-sm font-bold'
-                  : 'glass-card border-[rgba(196,181,253,0.16)] text-[#B7B0C7] hover:text-[#F7F5FC] hover:bg-[rgba(36,28,51,0.6)]'
-              }`}
-            >
-              {st.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold pt-1">
+          {statusOptions.map((status) => {
+            const active = statusFilter.toLowerCase() === status.toLowerCase();
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-all duration-200 border cursor-pointer ${
+                  active
+                    ? 'bg-[#7C3AED] text-white border-[#7C3AED] shadow-sm font-bold'
+                    : 'glass-card border-[rgba(255,255,255,0.08)] text-[#B7B0C7] hover:text-[#F7F5FC] hover:bg-[rgba(255,255,255,0.05)]'
+                }`}
+              >
+                {status}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Empty State */}
-      {filteredItems.length === 0 && (
-        <div className="glass-panel rounded-2xl p-12 text-center max-w-md mx-auto space-y-3 shadow-glass">
-          <div className="w-12 h-12 rounded-2xl bg-[rgba(18,16,25,0.7)] text-[#A78BFA] border border-[rgba(196,181,253,0.16)] flex items-center justify-center mx-auto text-xl">
-            🔖
+      {/* Application Cards List */}
+      {filteredApplications.length === 0 ? (
+        <div className="glass-panel rounded-3xl p-12 text-center max-w-lg mx-auto space-y-4">
+          <div className="w-14 h-14 rounded-3xl bg-[#7C3AED]/15 border border-[#7C3AED]/30 text-[#A78BFA] flex items-center justify-center mx-auto">
+            <Inbox className="w-7 h-7" />
           </div>
-          <h2 className="text-sm font-bold text-[#F7F5FC] font-display">
-            {selectedStatusFilter === 'All'
-              ? "You haven't saved any opportunities yet"
-              : `No opportunities marked as "${statusOptions.find(s => s.id === selectedStatusFilter)?.label || selectedStatusFilter}"`}
-          </h2>
-          <p className="text-xs text-[#B7B0C7]">
-            {selectedStatusFilter === 'All'
-              ? "You haven't saved any opportunities yet. Browse the catalogue to find opportunities worth exploring."
-              : "Change your filter to view other saved items, or explore the catalogue."}
-          </p>
-          <button
-            onClick={() => onNavigate('catalogue')}
-            className="px-4 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-xs font-semibold transition-colors shadow-sm cursor-pointer"
-          >
-            Find Opportunities
-          </button>
-        </div>
-      )}
-
-      {/* Saved Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {filteredItems.map((item) => {
-          const opp = item.opportunity;
-          if (!opp) return null;
-
-          const oppId = item.opportunityId || item._id;
-          const deadlineDate = new Date(opp.deadline);
-          const diffDays = Math.ceil((deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-          const isUrgent = diffDays > 0 && diffDays <= 4;
-          const isEditing = editingNotesId === oppId;
-
-          return (
-            <div
-              key={item._id}
-              className="glass-card glass-card-interactive rounded-2xl p-5 flex flex-col justify-between"
+          <div>
+            <h3 className="text-base font-bold text-white font-display">
+              {searchQuery || statusFilter !== 'All' || typeFilter !== 'All'
+                ? 'No tracked applications match your filter'
+                : 'No Tracked Applications Yet'}
+            </h3>
+            <p className="text-xs text-[#91899F] mt-1 max-w-sm mx-auto leading-relaxed">
+              {searchQuery || statusFilter !== 'All' || typeFilter !== 'All'
+                ? 'Try clearing your search query or switching filters to see other applications.'
+                : 'Discover verified scholarships, internships, and competitive exams in the catalogue and track them here.'}
+            </p>
+          </div>
+          <div className="pt-2 flex items-center justify-center gap-3">
+            {(searchQuery || statusFilter !== 'All' || typeFilter !== 'All') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('All');
+                  setTypeFilter('All');
+                }}
+                className="px-4 py-2 rounded-xl border border-[rgba(255,255,255,0.12)] text-xs text-[#B7B0C7] hover:text-white cursor-pointer"
+              >
+                Clear Filters
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => onNavigate('catalogue')}
+              className="px-5 py-2 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
             >
-              <div>
-                {/* Top Row: Category + Date + Delete */}
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-1.5">
-                    <StatusBadge status={opp.category} type="category" />
-                    <span className="text-[10px] text-[#92899F] font-medium">
-                      Saved {new Date(item.savedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => onRemoveSaved(oppId)}
-                    className="p-1.5 rounded-lg text-[#92899F] hover:text-[#FB7185] hover:bg-[#FB7185]/10 transition-colors cursor-pointer"
-                    title="Remove from saved"
-                    aria-label="Remove"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+              Explore Catalogue
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredApplications.map((app) => {
+            const deadlineDate = app.deadline ? new Date(app.deadline) : null;
+            const diffDays = deadlineDate
+              ? Math.ceil((deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+              : null;
+            const isUrgent = diffDays !== null && diffDays > 0 && diffDays <= 5;
+            const isExpired = diffDays !== null && diffDays < 0;
 
-                {/* Organization & Title */}
-                <div className="text-xs text-[#B7B0C7] font-medium mb-1 truncate flex items-center gap-1.5">
-                  <Building className="w-3.5 h-3.5 text-[#A78BFA]" />
-                  <span>{opp.organization}</span>
-                </div>
+            const isPendingSubmission = ['Interested', 'Application Started'].includes(app.status);
 
-                <h2
-                  onClick={() => onSelectOpportunity(opp)}
-                  className="text-base font-bold text-[#F7F5FC] hover:text-[#C4B5FD] cursor-pointer transition-colors leading-snug mb-3 font-display"
-                >
-                  {opp.title}
-                </h2>
+            return (
+              <div
+                key={app._id}
+                className="glass-card rounded-2xl p-5 border border-[rgba(255,255,255,0.08)] hover:border-[#7C3AED]/40 transition-all duration-200 relative group"
+              >
+                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                  {/* Left Column: Organization, Title, Badges */}
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge status={app.opportunityType} type="category" />
+                      <StatusBadge status={app.status} type="pipeline" />
+                      <StatusBadge status={app.statusSource || 'Manual Update'} type="source" />
+                      {app.externalReference && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-medium bg-[#14101F] text-[#DDD6FE] border border-[rgba(255,255,255,0.10)]">
+                          <Hash className="w-3 h-3 text-[#A78BFA]" />
+                          <span>{app.externalReference}</span>
+                        </span>
+                      )}
+                    </div>
 
-                {/* Status Switcher & Deadline */}
-                <div className="bg-[rgba(13,11,19,0.6)] p-3 rounded-xl border border-[rgba(196,181,253,0.14)] flex flex-wrap items-center justify-between gap-3 text-xs mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-[#F7F5FC] text-[11px]">Application Status:</span>
-                    <select
-                      value={item.status}
-                      onChange={(e) => onUpdateStatus(oppId, e.target.value, item.notes)}
-                      className="bg-[rgba(9,9,15,0.8)] border border-[rgba(196,181,253,0.18)] rounded-lg px-2 py-1 font-bold text-[#F7F5FC] text-xs focus:outline-none focus:border-[#7C3AED] cursor-pointer"
+                    <div className="flex items-center gap-1.5 text-xs text-[#B7B0C7]">
+                      <Building className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
+                      <span className="font-medium truncate">{app.organization}</span>
+                    </div>
+
+                    <h2
+                      onClick={() => onSelectOpportunity && onSelectOpportunity(app)}
+                      className="text-base sm:text-lg font-bold text-white hover:text-[#C4B5FD] transition-colors cursor-pointer line-clamp-1 font-display"
                     >
-                      <option value="Interested" className="bg-[#17141F]">Saved</option>
-                      <option value="Preparing" className="bg-[#17141F]">Planning to Apply</option>
-                      <option value="Applied" className="bg-[#17141F]">Applied</option>
-                      <option value="Completed" className="bg-[#17141F]">Completed</option>
-                    </select>
-                  </div>
+                      {app.opportunityTitle}
+                    </h2>
 
-                  <div className="flex items-center gap-1 text-[11px]">
-                    <Clock className={`w-3.5 h-3.5 ${isUrgent ? 'text-[#FBBF24]' : 'text-[#92899F]'}`} />
-                    <span className={isUrgent ? 'font-bold text-[#FCD34D]' : 'text-[#B7B0C7]'}>
-                      {diffDays < 0 ? 'Closed' : `${diffDays} days left`}
-                    </span>
-                  </div>
-                </div>
+                    {/* Submission Date / Deadline Row */}
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-[#B7B0C7] pt-1">
+                      {app.applicationDate ? (
+                        <div className="flex items-center gap-1.5 text-[#34D399]">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>
+                            Submitted on {new Date(app.applicationDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-amber-300">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Not yet submitted on external portal</span>
+                        </div>
+                      )}
 
-                {/* Personal Notes Section */}
-                <div className="mb-3 text-xs">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-[#A78BFA] mb-1">
-                    <span>Your Notes:</span>
-                    {!isEditing && (
-                      <button
-                        onClick={() => handleStartEditNotes(item)}
-                        className="text-[#A78BFA] hover:text-[#C4B5FD] flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer"
-                      >
-                        <FileEdit className="w-3 h-3" />
-                        <span>{item.notes ? 'Edit' : 'Add Note'}</span>
-                      </button>
+                      {deadlineDate && (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-[#A78BFA]" />
+                          <span className={isUrgent ? 'text-amber-400 font-semibold' : isExpired ? 'text-rose-400 font-semibold' : ''}>
+                            Deadline: {deadlineDate.toLocaleDateString()} {isExpired ? '(Passed)' : `(${diffDays} days left)`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Notes Snippet if present */}
+                    {app.notes && (
+                      <p className="text-xs text-[#D8D2E7] line-clamp-1 pt-1 italic">
+                        "{app.notes}"
+                      </p>
                     )}
                   </div>
 
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <textarea
-                        rows={2}
-                        value={tempNotes}
-                        onChange={(e) => setTempNotes(e.target.value)}
-                        placeholder="Write reminders for yourself (e.g. ask for recommendation letter, submit before Friday)..."
-                        className="w-full p-2.5 glass-input rounded-xl text-xs font-medium resize-none"
-                      />
-                      <div className="flex justify-end gap-1.5">
+                  {/* Right Column: Actions */}
+                  <div className="flex flex-wrap lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-2 shrink-0 border-t lg:border-t-0 pt-3 lg:pt-0 border-[rgba(255,255,255,0.06)]">
+                    {/* Official Portal Button with Link Validation */}
+                    {app.officialApplicationUrl && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenOfficialPortal(app)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.10)] text-[#F7F5FC] text-xs font-semibold transition-all cursor-pointer"
+                        title="Open external application portal safely"
+                      >
+                        <span>Official Portal</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-[#A78BFA]" />
+                      </button>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                      {/* Prominent "Did you submit?" button for pending items */}
+                      {isPendingSubmission && (
                         <button
-                          onClick={() => setEditingNotesId(null)}
-                          className="px-2.5 py-1 text-[#92899F] hover:text-[#F7F5FC] rounded-lg text-[11px] font-medium cursor-pointer"
+                          type="button"
+                          onClick={() => onConfirmSubmission && onConfirmSubmission(app)}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 border border-emerald-500/40 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                          title="Confirm you completed and submitted on external portal"
                         >
-                          Cancel
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Confirm Submitted</span>
                         </button>
-                        <button
-                          onClick={() => handleSaveNotes(oppId, item.status)}
-                          className="px-3 py-1 bg-[#7C3AED] text-white rounded-lg font-semibold text-[11px] hover:bg-[#6D28D9] flex items-center gap-1 shadow-sm cursor-pointer"
-                        >
-                          <Save className="w-3 h-3" />
-                          <span>Save Note</span>
-                        </button>
-                      </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => onUpdateStatus && onUpdateStatus(app)}
+                        className="px-3 py-1.5 rounded-xl bg-[#7C3AED]/20 hover:bg-[#7C3AED]/35 text-[#C4B5FD] border border-[#7C3AED]/40 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <Sliders className="w-3.5 h-3.5" />
+                        <span>Status</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onSelectOpportunity && onSelectOpportunity(app)}
+                        className="p-1.5 rounded-xl hover:bg-[rgba(255,255,255,0.08)] text-[#91899F] hover:text-white transition-colors cursor-pointer"
+                        title="View Full Status History & Details"
+                        aria-label="View Full Status History & Details"
+                      >
+                        <History className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onDeleteApplication && onDeleteApplication(app._id)}
+                        className="p-1.5 rounded-xl hover:bg-rose-500/20 text-[#91899F] hover:text-rose-300 transition-colors cursor-pointer"
+                        title="Untrack this application"
+                        aria-label="Untrack this application"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                  ) : (
-                    <p className="text-[#EDE5FF] text-xs italic bg-[rgba(13,11,19,0.6)] p-3 rounded-xl border border-dashed border-[rgba(196,181,253,0.16)] leading-relaxed">
-                      {item.notes || 'No notes added yet. Click "Add Note" to write reminders for yourself.'}
-                    </p>
-                  )}
+                  </div>
                 </div>
               </div>
-
-              {/* Bottom Actions */}
-              <div className="pt-3 border-t border-[rgba(196,181,253,0.14)] flex items-center justify-between gap-2 text-xs">
-                <button
-                  onClick={() => onOpenReminder(opp)}
-                  className="flex items-center gap-1.5 text-[#B7B0C7] hover:text-[#F7F5FC] font-semibold px-2 py-1.5 rounded-xl hover:bg-[#1E1929] transition-colors"
-                >
-                  <Bell className="w-3.5 h-3.5 text-[#A78BFA]" />
-                  <span>Set Reminder</span>
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => onSelectOpportunity(opp)}
-                    className="font-semibold text-[#A78BFA] hover:underline text-xs"
-                  >
-                    View Details
-                  </button>
-                  {opp.sourceUrl && (
-                    <a
-                      href={opp.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 rounded-lg text-[#8F879F] hover:text-[#F7F5FC] hover:bg-[#1E1929]"
-                      title="Open Official Website"
-                      aria-label="Open Official Website"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

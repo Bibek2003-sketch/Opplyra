@@ -1,14 +1,16 @@
 require('dotenv').config();
+require('./utils/sanitizeLog');
 const mongoose = require('mongoose');
 const Opportunity = require('./models/Opportunity');
 const Profile = require('./models/Profile');
 const SavedOpportunity = require('./models/SavedOpportunity');
 const Reminder = require('./models/Reminder');
 const { sampleOpportunities } = require('./seeds/seedData');
+const { maskMongoUri } = require('./utils/sanitizeLog');
 
 async function seedDatabase() {
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/opplyra';
-  console.log(`[Seed] Connecting to MongoDB at ${uri}...`);
+  console.log(`[Seed] Connecting to MongoDB at ${maskMongoUri(uri)}...`);
 
   try {
     await mongoose.connect(uri, {
@@ -65,7 +67,7 @@ async function seedDatabase() {
     await mongoose.disconnect();
     process.exit(0);
   } catch (err) {
-    console.error('[Seed Error]:', err);
+    console.error('[Seed Error]:', maskMongoUri(err.message || String(err)));
     process.exit(1);
   }
 }

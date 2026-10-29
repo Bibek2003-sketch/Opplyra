@@ -1,11 +1,21 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+const { authenticateUser } = require('../middleware/auth');
 const {
   getProfile,
   updateProfile,
-} = require("../controllers/profileController");
+  uploadAvatar,
+  removeAvatar,
+  changePassword,
+} = require('../controllers/profileController');
 
-router.get("/", getProfile);
-router.put("/", updateProfile);
+// All profile endpoints are protected by student authentication
+router.use(authenticateUser);
+
+router.get('/', getProfile);
+router.put('/', updateProfile);
+router.post('/avatar', uploadAvatar);
+router.delete('/avatar', removeAvatar);
+router.post('/change-password', changePassword);
 
 module.exports = router;

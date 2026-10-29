@@ -25,11 +25,13 @@ export function OpportunityModal({
   onToggleSave,
   onUpdateStatus,
   onOpenReminder,
-  onOpenProfile
+  onOpenProfile,
+  onApplyNow,
 }) {
+  const [activeTab, setActiveTab] = useState('eligibility');
+
   if (!opportunity) return null;
 
-  const [activeTab, setActiveTab] = useState('eligibility');
   const eligibility = opportunity.eligibility || {};
   const evaluations = eligibility.evaluations || [];
 
@@ -118,16 +120,29 @@ export function OpportunityModal({
             </button>
           </div>
 
-          {opportunity.sourceUrl && (
-            <a
-              href={opportunity.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-semibold text-[#A78BFA] hover:text-[#C4B5FD] hover:underline transition-colors cursor-pointer"
+          {opportunity.sourceUrl && opportunity.urlVerificationStatus !== 'unavailable' ? (
+            <button
+              type="button"
+              onClick={() => {
+                if (onApplyNow) {
+                  onApplyNow(opportunity);
+                } else {
+                  window.open(opportunity.sourceUrl, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-xl font-bold transition-all shadow-sm cursor-pointer ${
+                opportunity.urlVerificationStatus === 'needs_review'
+                  ? 'bg-amber-600/30 hover:bg-amber-600/40 text-amber-200 border border-amber-500/30'
+                  : 'bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
+              }`}
             >
-              <span>Open Official Website</span>
+              <span>{opportunity.urlVerificationStatus === 'needs_review' ? 'Review Official Link' : 'Apply on Official Portal'}</span>
               <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+            </button>
+          ) : (
+            <span className="text-[11px] text-[#91899F] italic">
+              Official application link pending verification
+            </span>
           )}
         </div>
 

@@ -61,7 +61,10 @@ export function LandingPage({
       id: 'Scholarships',
       title: 'Scholarships',
       icon: GraduationCap,
-      color: 'text-[#FBBF24]',
+      color: 'text-[#38BDF8]',
+      iconBg: 'bg-[#38BDF8]/15',
+      iconBorder: 'border-[#38BDF8]/25',
+      hoverBorder: 'hover:border-[#38BDF8]/40',
       badge: 'Funding & Grants',
       desc: 'Merit-based scholarships, government aid schemes, and tuition grants to support your academic goals.'
     },
@@ -69,7 +72,10 @@ export function LandingPage({
       id: 'Internships',
       title: 'Internships',
       icon: Briefcase,
-      color: 'text-[#A78BFA]',
+      color: 'text-[#34D399]',
+      iconBg: 'bg-[#34D399]/15',
+      iconBorder: 'border-[#34D399]/25',
+      hoverBorder: 'hover:border-[#34D399]/40',
       badge: 'Hands-on Experience',
       desc: 'Industry apprenticeships, software engineering roles, and university research fellowships with verified stipends.'
     },
@@ -77,7 +83,10 @@ export function LandingPage({
       id: 'Competitive Examinations',
       title: 'Competitive Examinations',
       icon: BookOpen,
-      color: 'text-[#60A5FA]',
+      color: 'text-[#FBBF24]',
+      iconBg: 'bg-[#FBBF24]/15',
+      iconBorder: 'border-[#FBBF24]/25',
+      hoverBorder: 'hover:border-[#FBBF24]/40',
       badge: 'National Testing',
       desc: 'National exams including GATE, Civil Services, Banking, and Defense recruitment deadlines.'
     },
@@ -85,14 +94,17 @@ export function LandingPage({
       id: 'Jobs & Training',
       title: 'Jobs & Training',
       icon: Rocket,
-      color: 'text-[#34D399]',
+      color: 'text-[#FB7185]',
+      iconBg: 'bg-[#FB7185]/15',
+      iconBorder: 'border-[#FB7185]/25',
+      hoverBorder: 'hover:border-[#FB7185]/40',
       badge: 'Early Career',
       desc: 'Graduate engineer trainee programs, public sector apprenticeships, and entry-level positions.'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#08080D] text-[#F7F5FC] selection:bg-[#7C3AED] selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0B0A10] text-[#F7F5FC] selection:bg-[#7C3AED] selection:text-white relative overflow-x-hidden">
       {/* Vercel-style Background Ambient Light */}
       <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
         {/* Subtle grid background pattern */}
@@ -105,7 +117,7 @@ export function LandingPage({
         />
 
         {/* Ambient violet hero glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-[#7C3AED]/18 via-[#4F46E5]/08 to-transparent rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-[#7C3AED]/20 via-[#4F46E5]/10 to-transparent rounded-full blur-[140px] pointer-events-none" />
       </div>
 
       {/* ======================================================== */}
@@ -423,7 +435,7 @@ export function LandingPage({
                 <div className="md:col-span-7 rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[rgba(22,18,31,0.65)] p-5 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-[#7C3AED]/20 text-[#C4B5FD] border border-[#7C3AED]/35">
+                      <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-[#34D399]/15 text-[#34D399] border border-[#34D399]/35">
                         Internships
                       </span>
                       <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-[#34D399]/15 text-[#34D399] border border-[#34D399]/35">
@@ -795,11 +807,11 @@ export function LandingPage({
               <div
                 key={c.id}
                 onClick={() => onNavigateToCategory(c.id)}
-                className="group rounded-3xl border border-[rgba(255,255,255,0.08)] hover:border-[#7C3AED]/40 bg-[rgba(14,12,21,0.55)] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 hover:bg-[rgba(22,18,31,0.7)] cursor-pointer"
+                className={`group rounded-3xl border border-[rgba(255,255,255,0.08)] ${c.hoverBorder} bg-[rgba(14,12,21,0.55)] p-6 sm:p-7 flex flex-col justify-between transition-all duration-300 hover:bg-[rgba(22,18,31,0.7)] cursor-pointer`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <div className={`w-10 h-10 rounded-xl ${c.iconBg} border ${c.iconBorder} flex items-center justify-center group-hover:scale-105 transition-transform`}>
                       <Icon className={`w-5 h-5 ${c.color}`} />
                     </div>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-[rgba(255,255,255,0.04)] text-[#91899F] border border-[rgba(255,255,255,0.06)]">

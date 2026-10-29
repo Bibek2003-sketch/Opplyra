@@ -7,7 +7,8 @@ export function OpportunityCard({
   onSelect,
   isSaved,
   savedStatus,
-  onToggleSave
+  onToggleSave,
+  onApplyNow,
 }) {
   const deadlineDate = new Date(opportunity.deadline);
   const now = new Date();
@@ -37,7 +38,7 @@ export function OpportunityCard({
             }}
             className={`p-2 rounded-xl transition-all duration-200 border cursor-pointer ${
               isSaved
-                ? 'bg-[#7C3AED]/25 text-[#C4B5FD] border-[#7C3AED]/40 shadow-sm'
+                ? 'bg-[#7C3AED]/25 text-[#B69AFF] border-[#7C3AED]/40 shadow-sm'
                 : 'text-[#92899F] hover:text-[#F7F5FC] hover:bg-[rgba(22,18,31,0.6)] border-transparent'
             }`}
             title={isSaved ? 'Saved in My Applications' : 'Save this opportunity'}
@@ -49,13 +50,13 @@ export function OpportunityCard({
 
         {/* Organization & Title */}
         <div className="flex items-center gap-1.5 text-xs text-[#B7B0C7] mb-1.5 font-medium">
-          <Building className="w-3.5 h-3.5 text-[#A78BFA] shrink-0" />
+          <Building className="w-3.5 h-3.5 text-[#B69AFF] shrink-0" />
           <span className="truncate">{opportunity.organization}</span>
         </div>
 
         <h3
           onClick={() => onSelect(opportunity)}
-          className="text-base font-bold text-[#F7F5FC] group-hover:text-[#C4B5FD] transition-colors cursor-pointer line-clamp-2 leading-snug mb-2 font-display"
+          className="text-base font-bold text-[#F7F5FC] group-hover:text-[#F3E8FF] transition-colors cursor-pointer line-clamp-2 leading-snug mb-2 font-display"
         >
           {opportunity.title}
         </h3>
@@ -65,8 +66,8 @@ export function OpportunityCard({
         </p>
 
         {/* Stated Eligibility Snapshot Box */}
-        <div className="bg-[rgba(10,8,15,0.48)] border border-[rgba(255,255,255,0.10)] rounded-xl p-3 mb-4 backdrop-blur-md">
-          <div className="text-[10px] font-bold text-[#A78BFA] uppercase tracking-wider mb-1">
+        <div className="bg-[rgba(14,12,19,0.55)] border border-[rgba(255,255,255,0.08)] rounded-xl p-3 mb-4 backdrop-blur-md">
+          <div className="text-[10px] font-bold text-[#B69AFF] uppercase tracking-wider mb-1">
             Eligibility Summary
           </div>
           <p className="text-xs text-[#EDE5FF] line-clamp-2 leading-relaxed">
@@ -76,7 +77,7 @@ export function OpportunityCard({
       </div>
 
       {/* Bottom Footer Info & Actions */}
-      <div className="pt-3 border-t border-[rgba(255,255,255,0.10)] mt-1">
+      <div className="pt-3 border-t border-[rgba(255,255,255,0.08)] mt-1">
         <div className="flex items-center justify-between text-xs mb-3">
           <div className="flex items-center gap-1.5">
             <Clock className={`w-3.5 h-3.5 ${isUrgent ? 'text-[#FBBF24]' : isExpired ? 'text-[#FB7185]' : 'text-[#92899F]'}`} />
@@ -86,7 +87,7 @@ export function OpportunityCard({
           </div>
 
           {opportunity.stipendOrAward && opportunity.stipendOrAward !== 'Not specified' && (
-            <div className="font-semibold text-[#C4B5FD] text-[11px] bg-[#7C3AED]/20 px-2.5 py-0.5 rounded-lg border border-[#7C3AED]/40 shadow-sm">
+            <div className="font-semibold text-[#B69AFF] text-[11px] bg-[#7C3AED]/20 px-2.5 py-0.5 rounded-lg border border-[#7C3AED]/35 shadow-sm">
               {opportunity.stipendOrAward}
             </div>
           )}
@@ -102,23 +103,47 @@ export function OpportunityCard({
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => onSelect(opportunity)}
-            className="flex-1 text-xs font-semibold py-2 px-3 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white transition-all text-center flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+            className="flex-1 text-xs font-semibold py-2 px-3 rounded-xl bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.09)] border border-[rgba(255,255,255,0.12)] text-[#F7F5FC] transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            <span>View Details & Eligibility</span>
+            <span>Eligibility</span>
           </button>
 
-          {opportunity.sourceUrl && (
-            <a
-              href={opportunity.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-xl border border-[rgba(255,255,255,0.12)] bg-[rgba(10,8,15,0.52)] text-[#B7B0C7] hover:text-[#F7F5FC] hover:border-[#7C3AED]/50 hover:bg-[rgba(22,18,31,0.6)] transition-all cursor-pointer"
-              title="Open Official Website"
-              aria-label="Open Official Website"
+          {opportunity.sourceUrl && opportunity.urlVerificationStatus !== 'unavailable' ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onApplyNow) {
+                  onApplyNow(opportunity);
+                } else {
+                  window.open(opportunity.sourceUrl, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              className={`flex-1 text-xs font-bold py-2 px-3 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 shadow-sm cursor-pointer ${
+                opportunity.urlVerificationStatus === 'needs_review'
+                  ? 'bg-amber-600/30 hover:bg-amber-600/40 text-amber-200 border border-amber-500/30'
+                  : 'bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
+              }`}
+              title={
+                opportunity.urlVerificationStatus === 'needs_review'
+                  ? 'Official link pending manual review'
+                  : 'Open verified official portal and track application'
+              }
             >
-              <ExternalLink className="w-4 h-4" />
-            </a>
+              <span>{opportunity.urlVerificationStatus === 'needs_review' ? 'Review Link' : 'Apply Now'}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="flex-1 text-[11px] font-medium py-2 px-2 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] text-[#91899F] transition-all text-center cursor-not-allowed"
+              title="Official application link pending verification"
+            >
+              <span>Link Pending</span>
+            </button>
           )}
         </div>
       </div>

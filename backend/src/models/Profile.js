@@ -42,6 +42,69 @@ const profileSchema = new mongoose.Schema({
     enum: ['Female', 'Male', 'Non-Binary', 'Prefer not to say'],
     default: 'Female',
   },
+  phone: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  city: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  state: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  university: {
+    type: String,
+    default: 'Indian Institute of Technology / State University',
+    trim: true,
+  },
+  specialization: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  semester: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  graduationYear: {
+    type: String,
+    default: '',
+    trim: true,
+  },
+  avatarUrl: {
+    type: String,
+    default: '',
+  },
+  preferredCategories: {
+    type: [String],
+    default: ['Scholarships', 'Internships'],
+  },
+  preferredIndustries: {
+    type: [String],
+    default: ['Technology & Software', 'Research & Development'],
+  },
+  careerInterests: {
+    type: [String],
+    default: ['Full Stack Engineering', 'Machine Learning'],
+  },
+  skills: {
+    type: [String],
+    default: ['JavaScript', 'Python', 'React', 'Problem Solving'],
+  },
+  preferredLocations: {
+    type: [String],
+    default: ['Remote', 'Bangalore', 'Delhi NCR'],
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: true,
+  },
   updatedAt: {
     type: Date,
     default: Date.now,

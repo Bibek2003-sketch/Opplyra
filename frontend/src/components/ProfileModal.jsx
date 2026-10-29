@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { X, User, Check } from 'lucide-react';
 
 export function ProfileModal({ isOpen, onClose, currentProfile, onSave }) {
-  if (!isOpen) return null;
-
   const [formData, setFormData] = useState({
     fullName: currentProfile?.fullName || 'Priya Sharma',
     course: currentProfile?.course || 'B.Tech Computer Science',
@@ -42,6 +40,8 @@ export function ProfileModal({ isOpen, onClose, currentProfile, onSave }) {
       setIsSubmitting(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-md flex items-center justify-center p-4 text-[#F7F5FC]">

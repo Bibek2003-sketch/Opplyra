@@ -9,6 +9,11 @@ import { ReminderModal } from './components/ReminderModal';
 import { DeadlinesSidebar } from './components/DeadlinesSidebar';
 import { AuthModal } from './components/AuthModal';
 import { LegalModal } from './components/LegalModal';
+import { ApplyConfirmationModal } from './components/ApplyConfirmationModal';
+import { ApplicationStatusModal } from './components/ApplicationStatusModal';
+import { ApplicationTimelineModal } from './components/ApplicationTimelineModal';
+import { NotificationPreferencesModal } from './components/NotificationPreferencesModal';
+import { PortalLinkErrorModal } from './components/PortalLinkErrorModal';
 
 import { LandingPage } from './pages/LandingPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -16,14 +21,16 @@ import { CataloguePage } from './pages/CataloguePage';
 import { VerificationPage } from './pages/VerificationPage';
 import { SavedTrackerPage } from './pages/SavedTrackerPage';
 import { RemindersPage } from './pages/RemindersPage';
+import { NotificationsPage } from './pages/NotificationsPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 export default function App() {
-  // View State: 'landing' (Public Vercel-inspired page at /) | 'app' (Authenticated dashboard at /app)
+  // View State: 'landing' (Public Vercel-inspired page at /) | 'app' (Authenticated dashboard at /app or /profile)
   const initialView = () => {
-    const path = window.location.pathname;
-    const hash = window.location.hash;
-    const storedAuth = localStorage.getItem('opplyra_auth');
-    if ((path === '/app' || hash === '#app') && storedAuth) {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    const storedAuth = typeof window !== 'undefined' ? localStorage.getItem('opplyra_auth') : null;
+    if ((path === '/app' || hash === '#app' || path === '/profile' || hash === '#profile') && storedAuth) {
       return 'app';
     }
     return 'landing';
@@ -57,9 +64,22 @@ export default function App() {
   const [legalModalState, setLegalModalState] = useState({ isOpen: false, type: 'privacy' });
 
   // Dashboard Navigation State
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const initialTab = () => {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '';
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    if (path === '/profile' || hash === '#profile') {
+      return 'profile';
+    }
+    return 'dashboard';
+  };
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDeadlinesOpen, setIsDeadlinesOpen] = useState(false);
+  const [isDeadlinesOpen, setIsDeadlinesOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1280;
+    }
+    return false;
+  });
   const [toast, setToast] = useState(null);
 
   // Auto-open on navbar logo hover with graceful debounce
@@ -100,6 +120,25 @@ export default function App() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [reminderTargetOpp, setReminderTargetOpp] = useState(null);
 
+  // Application Tracking System States
+  const [applications, setApplications] = useState([]);
+  const [applicationSummary, setApplicationSummary] = useState(null);
+  const [confirmationTargetApp, setConfirmationTargetApp] = useState(null);
+  const [statusTargetApp, setStatusTargetApp] = useState(null);
+  const [timelineTargetApp, setTimelineTargetApp] = useState(null);
+  const [isPreferencesModalOpen, setIsPreferencesModalOpen] = useState(false);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [portalErrorState, setPortalErrorState] = useState({
+    isOpen: false,
+    errorType: 'unknown',
+    opportunityTitle: '',
+    organization: '',
+    targetUrl: '',
+    officialHomepageUrl: '',
+    opportunityId: null,
+    applicationId: null,
+  });
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => {
@@ -112,7 +151,15 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname;
       const hash = window.location.hash;
-      if (path === '/app' || hash === '#app') {
+      const storedAuth = localStorage.getItem('opplyra_auth');
+      if (path === '/profile' || hash === '#profile') {
+        if (storedAuth) {
+          setView('app');
+          setActiveTab('profile');
+        } else {
+          setView('landing');
+        }
+      } else if (path === '/app' || hash === '#app') {
         setView('app');
       } else {
         setView('landing');
@@ -136,10 +183,11 @@ export default function App() {
     if (tab) setActiveTab(tab);
     if (presets) setCataloguePresets(presets);
     setView('app');
+    const targetUrl = tab === 'profile' ? '/profile' : '/app';
     try {
-      window.history.pushState(null, '', '/app');
+      window.history.pushState(null, '', targetUrl);
     } catch {
-      window.location.hash = '#app';
+      window.location.hash = tab === 'profile' ? '#profile' : '#app';
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -173,12 +221,15 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const [oppsRes, sumRes, savedRes, remRes, profRes] = await Promise.all([
+      const [oppsRes, sumRes, savedRes, remRes, profRes, appsRes, appSumRes, unreadRes] = await Promise.all([
         api.getOpportunities(),
         api.getDashboardSummary(),
         api.getSaved(),
         api.getReminders(),
         api.getProfile(),
+        api.getApplications(),
+        api.getApplicationSummary(),
+        api.getUnreadNotificationCount().catch(() => ({ count: 0 })),
       ]);
 
       setOpportunities(oppsRes.data || []);
@@ -186,11 +237,169 @@ export default function App() {
       setSavedItems(savedRes.data || []);
       setReminders(remRes.data || []);
       setProfile(profRes.data || null);
+      setApplications(appsRes.data || []);
+      setApplicationSummary(appSumRes.data || null);
+      if (unreadRes && typeof unreadRes.count === 'number') {
+        setUnreadNotificationsCount(unreadRes.count);
+      }
     } catch (err) {
       console.error('Initial load failure:', err);
       setError('Could not connect to the server. Retrying...');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const refreshUnreadCount = async () => {
+    try {
+      const res = await api.getUnreadNotificationCount();
+      if (res && typeof res.count === 'number') {
+        setUnreadNotificationsCount(res.count);
+      }
+    } catch (err) {
+      console.warn('Could not load unread notifications count:', err);
+    }
+  };
+
+  const handleNavigateNotification = (notif) => {
+    refreshUnreadCount();
+    if (!notif) return;
+    if (notif.applicationId) {
+      setActiveTab('tracker');
+      const app = applications.find((a) => a._id === notif.applicationId);
+      if (app) setTimelineTargetApp(app);
+    } else if (notif.opportunityId) {
+      const opp = opportunities.find((o) => o._id === notif.opportunityId);
+      if (opp) setSelectedOpportunity(opp);
+      setActiveTab('catalogue');
+    } else if (notif.destinationRoute) {
+      if (notif.destinationRoute.includes('tracker')) setActiveTab('tracker');
+      else if (notif.destinationRoute.includes('catalogue')) setActiveTab('catalogue');
+      else if (notif.destinationRoute.includes('reminders')) setActiveTab('reminders');
+      else if (notif.destinationRoute.includes('notifications')) setActiveTab('notifications');
+      else setActiveTab('dashboard');
+    } else {
+      setActiveTab('tracker');
+    }
+  };
+
+  const refreshApplications = async () => {
+    try {
+      const [appsRes, appSumRes] = await Promise.all([
+        api.getApplications(),
+        api.getApplicationSummary(),
+      ]);
+      setApplications(appsRes.data || []);
+      setApplicationSummary(appSumRes.data || null);
+      refreshUnreadCount();
+    } catch (err) {
+      console.warn('Could not refresh applications:', err);
+    }
+  };
+
+  const handleApplyNow = async (opp) => {
+    if (!opp) return;
+
+    const url = opp.sourceUrl;
+
+    // Check if missing or invalid protocol
+    if (!url || !/^https?:\/\//i.test(url)) {
+      setPortalErrorState({
+        isOpen: true,
+        errorType: 'invalid_url',
+        opportunityTitle: opp.title,
+        organization: opp.organization,
+        targetUrl: url || '',
+        officialHomepageUrl: opp.officialHomepageUrl || null,
+        opportunityId: opp._id,
+      });
+      return;
+    }
+
+    // Check if unverified or demo link
+    if (
+      opp.urlVerificationStatus === 'needs_review' ||
+      opp.urlVerificationStatus === 'unavailable' ||
+      url.includes('/demo/') ||
+      url.includes('-demo')
+    ) {
+      setPortalErrorState({
+        isOpen: true,
+        errorType: 'unverified',
+        opportunityTitle: opp.title,
+        organization: opp.organization,
+        targetUrl: url,
+        officialHomepageUrl: opp.officialHomepageUrl || null,
+        opportunityId: opp._id,
+      });
+      return;
+    }
+
+    // 1. Open verified portal safely in a new browser tab
+    window.open(url, '_blank', 'noopener,noreferrer');
+
+    // 2. Initialize tracking record as Application Started (NOT Applied)
+    try {
+      const res = await api.createApplication({
+        opportunityId: opp._id,
+        opportunityTitle: opp.title,
+        organization: opp.organization,
+        opportunityType: opp.category,
+        officialApplicationUrl: url,
+        officialHomepageUrl: opp.officialHomepageUrl || null,
+        urlVerificationStatus: opp.urlVerificationStatus || 'verified',
+        status: 'Application Started',
+        deadline: opp.deadline,
+        statusSource: 'Manual Update',
+        notes: 'Opened official application portal from Opplyra.',
+      });
+
+      const trackedApp = res.data;
+      await refreshApplications();
+
+      // 3. Prompt user with "Did you submit your application?" modal
+      setConfirmationTargetApp(trackedApp);
+      showToast('Opened official portal in a new tab. Confirm your submission when done!');
+    } catch (err) {
+      showToast(err.message || 'Could not start tracking.', 'error');
+    }
+  };
+
+  const handleConfirmSubmission = async ({ externalReference, note }) => {
+    if (!confirmationTargetApp) return;
+    try {
+      const appId = confirmationTargetApp._id;
+      await api.updateApplicationStatus(appId, {
+        status: 'Applied',
+        source: 'User Confirmed',
+        note: note || 'Student confirmed application submission on official portal.',
+        externalReference,
+      });
+      await refreshApplications();
+      setConfirmationTargetApp(null);
+      showToast('Submission confirmed! Your application status is now "Applied".');
+    } catch (err) {
+      showToast(err.message || 'Could not confirm submission.', 'error');
+    }
+  };
+
+  const handleSaveStatus = async (appId, payload) => {
+    try {
+      await api.updateApplicationStatus(appId, payload);
+      await refreshApplications();
+      showToast(`Application status updated to "${payload.status}".`);
+    } catch (err) {
+      showToast(err.message || 'Could not update status.', 'error');
+    }
+  };
+
+  const handleDeleteApplication = async (appId) => {
+    try {
+      await api.deleteApplication(appId);
+      await refreshApplications();
+      showToast('Application removed from tracking.');
+    } catch (err) {
+      showToast(err.message || 'Could not remove application.', 'error');
     }
   };
 
@@ -274,14 +483,43 @@ export default function App() {
     if (presets) {
       setCataloguePresets(presets);
     }
+    const targetUrl = tab === 'profile' ? '/profile' : '/app';
+    try {
+      window.history.pushState(null, '', targetUrl);
+    } catch {
+      window.location.hash = tab === 'profile' ? '#profile' : '#app';
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSaveProfile = async (formData) => {
+  const handleSaveProfile = async (formDataOrUpdated) => {
+    // If it's already an updated profile object returned by API:
+    if (formDataOrUpdated && formDataOrUpdated._id) {
+      setProfile(formDataOrUpdated);
+      setCurrentUser(formDataOrUpdated);
+      try {
+        const stored = localStorage.getItem('opplyra_auth');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.user = formDataOrUpdated;
+          localStorage.setItem('opplyra_auth', JSON.stringify(parsed));
+        }
+      } catch (e) {}
+      return;
+    }
+
     try {
-      const res = await api.updateProfile(formData);
+      const res = await api.updateProfile(formDataOrUpdated);
       setProfile(res.data);
       setCurrentUser(res.data);
+      try {
+        const stored = localStorage.getItem('opplyra_auth');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.user = res.data;
+          localStorage.setItem('opplyra_auth', JSON.stringify(parsed));
+        }
+      } catch (e) {}
       showToast('Profile updated!');
 
       if (selectedOpportunity) {
@@ -303,20 +541,24 @@ export default function App() {
       <Toast toast={toast} onClose={() => setToast(null)} />
 
       {/* Global Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        initialMode={authModalMode}
-        onAuthSuccess={handleAuthSuccess}
-        existingProfile={profile}
-      />
+      {isAuthModalOpen && (
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialMode={authModalMode}
+          onAuthSuccess={handleAuthSuccess}
+          existingProfile={profile}
+        />
+      )}
 
       {/* Global Legal Modal */}
-      <LegalModal
-        isOpen={legalModalState.isOpen}
-        onClose={() => setLegalModalState({ ...legalModalState, isOpen: false })}
-        type={legalModalState.type}
-      />
+      {legalModalState.isOpen && (
+        <LegalModal
+          isOpen={legalModalState.isOpen}
+          onClose={() => setLegalModalState({ ...legalModalState, isOpen: false })}
+          type={legalModalState.type}
+        />
+      )}
 
       {/* ======================================================== */}
       {/* VIEW SWITCHER: LANDING PAGE vs AUTHENTICATED DASHBOARD    */}
@@ -343,7 +585,7 @@ export default function App() {
           <Sidebar
             activeTab={activeTab}
             setActiveTab={(tab) => {
-              setActiveTab(tab);
+              handleNavigate(tab);
               setIsSidebarOpen(false);
             }}
             isOpen={isSidebarOpen}
@@ -351,23 +593,33 @@ export default function App() {
             onMouseEnter={handleOpenSidebar}
             onMouseLeave={handleCloseSidebar}
             profile={currentUser || profile}
-            onOpenProfile={() => setIsProfileModalOpen(true)}
+            onOpenProfile={() => {
+              handleNavigate('profile');
+              setIsSidebarOpen(false);
+            }}
             onNavigateToLanding={navigateToLanding}
             onLogout={handleLogout}
+            unreadNotificationsCount={unreadNotificationsCount}
           />
 
           {/* Main Content Area */}
-          <div className="flex-1 xl:pr-80 flex flex-col min-h-screen relative z-10">
+          <div className={`flex-1 ${isDeadlinesOpen ? 'xl:pr-80' : 'xl:pr-0'} flex flex-col min-h-screen relative z-10 transition-all duration-300 ease-in-out`}>
             <Navbar
               onToggleSidebar={handleToggleSidebar}
               onOpenSidebar={handleOpenSidebar}
               onCloseSidebar={handleCloseSidebar}
               onToggleDeadlines={() => setIsDeadlinesOpen(!isDeadlinesOpen)}
+              isDeadlinesOpen={isDeadlinesOpen}
               deadlinesCount={upcomingDeadlinesCount}
               activeTab={activeTab}
-              onOpenProfile={() => setIsProfileModalOpen(true)}
+              onOpenProfile={() => handleNavigate('profile')}
               onOpenVerification={() => handleNavigate('verification')}
               profile={currentUser || profile}
+              unreadNotificationsCount={unreadNotificationsCount}
+              onOpenNotificationPreferences={() => setIsPreferencesModalOpen(true)}
+              onViewAllNotifications={() => handleNavigate('notifications')}
+              onNavigateToApplication={handleNavigateNotification}
+              onNotificationChanged={refreshUnreadCount}
             />
 
             <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto">
@@ -380,6 +632,7 @@ export default function App() {
                   savedMap={savedMap}
                   onToggleSave={handleToggleSave}
                   onOpenReminder={(opp) => setReminderTargetOpp(opp)}
+                  onApplyNow={handleApplyNow}
                 />
               )}
 
@@ -395,6 +648,7 @@ export default function App() {
                   savedMap={savedMap}
                   onToggleSave={handleToggleSave}
                   onOpenReminder={(opp) => setReminderTargetOpp(opp)}
+                  onApplyNow={handleApplyNow}
                 />
               )}
 
@@ -402,12 +656,17 @@ export default function App() {
 
               {activeTab === 'tracker' && (
                 <SavedTrackerPage
-                  savedItems={savedItems}
-                  onUpdateStatus={handleUpdateStatus}
-                  onRemoveSaved={handleToggleSave}
+                  applications={applications}
+                  summary={applicationSummary}
+                  onUpdateStatus={(app) => setStatusTargetApp(app)}
+                  onConfirmSubmission={(app) => setConfirmationTargetApp(app)}
+                  onDeleteApplication={handleDeleteApplication}
                   onOpenReminder={(opp) => setReminderTargetOpp(opp)}
-                  onSelectOpportunity={handleSelectOpportunity}
+                  onSelectOpportunity={(app) => setTimelineTargetApp(app)}
                   onNavigate={handleNavigate}
+                  onOpenPreferences={() => setIsPreferencesModalOpen(true)}
+                  onRefresh={refreshApplications}
+                  onOpenPortalError={(errorData) => setPortalErrorState({ isOpen: true, ...errorData })}
                 />
               )}
 
@@ -417,6 +676,23 @@ export default function App() {
                   onDeleteReminder={handleDeleteReminder}
                   onSelectOpportunity={handleSelectOpportunity}
                   onNavigate={handleNavigate}
+                />
+              )}
+
+              {activeTab === 'notifications' && (
+                <NotificationsPage
+                  onOpenPreferences={() => setIsPreferencesModalOpen(true)}
+                  onNavigateToApplication={handleNavigateNotification}
+                  onNotificationChanged={refreshUnreadCount}
+                />
+              )}
+
+              {activeTab === 'profile' && (
+                <ProfilePage
+                  profile={currentUser || profile}
+                  onUpdateProfile={handleSaveProfile}
+                  onLogout={handleLogout}
+                  showToast={showToast}
                 />
               )}
             </main>
@@ -450,26 +726,98 @@ export default function App() {
                 setReminderTargetOpp(opp);
               }}
               onOpenProfile={() => {
-                setIsProfileModalOpen(true);
+                setIsOpportunityModalOpen(false);
+                handleNavigate('profile');
               }}
+              onApplyNow={handleApplyNow}
             />
           )}
 
           {/* Profile Modal */}
-          <ProfileModal
-            isOpen={isProfileModalOpen}
-            onClose={() => setIsProfileModalOpen(false)}
-            currentProfile={currentUser || profile}
-            onSave={handleSaveProfile}
-          />
+          {isProfileModalOpen && (
+            <ProfileModal
+              isOpen={isProfileModalOpen}
+              onClose={() => setIsProfileModalOpen(false)}
+              currentProfile={currentUser || profile}
+              onSave={handleSaveProfile}
+            />
+          )}
 
           {/* Reminder Config Modal */}
-          <ReminderModal
-            isOpen={!!reminderTargetOpp}
-            opportunity={reminderTargetOpp}
-            onClose={() => setReminderTargetOpp(null)}
-            onSaveReminder={handleSaveReminder}
-          />
+          {!!reminderTargetOpp && (
+            <ReminderModal
+              isOpen={!!reminderTargetOpp}
+              opportunity={reminderTargetOpp}
+              onClose={() => setReminderTargetOpp(null)}
+              onSaveReminder={handleSaveReminder}
+            />
+          )}
+
+          {/* Application Submission Confirmation Modal ("Did you submit your application?") */}
+          {confirmationTargetApp && (
+            <ApplyConfirmationModal
+              isOpen={!!confirmationTargetApp}
+              onClose={() => setConfirmationTargetApp(null)}
+              application={confirmationTargetApp}
+              opportunity={confirmationTargetApp}
+              onConfirmApplied={handleConfirmSubmission}
+              onKeepStarted={() => setConfirmationTargetApp(null)}
+            />
+          )}
+
+          {/* Application Status Update Modal */}
+          {statusTargetApp && (
+            <ApplicationStatusModal
+              isOpen={!!statusTargetApp}
+              onClose={() => setStatusTargetApp(null)}
+              application={statusTargetApp}
+              onSaveStatus={(appId, payload) => handleSaveStatus(appId, payload)}
+            />
+          )}
+
+          {/* Application Full Status History & Timeline Modal */}
+          {timelineTargetApp && (
+            <ApplicationTimelineModal
+              isOpen={!!timelineTargetApp}
+              onClose={() => setTimelineTargetApp(null)}
+              application={timelineTargetApp}
+              onOpenStatusModal={(app) => {
+                setTimelineTargetApp(null);
+                setStatusTargetApp(app);
+              }}
+            />
+          )}
+
+          {/* Student Notification & Email Reminder Preferences Modal */}
+          {isPreferencesModalOpen && (
+            <NotificationPreferencesModal
+              isOpen={isPreferencesModalOpen}
+              onClose={() => setIsPreferencesModalOpen(false)}
+              onSaveSuccess={() => showToast('Notification preferences saved!')}
+            />
+          )}
+
+          {/* Portal Link Error & Broken Link Reporting Modal */}
+          {portalErrorState.isOpen && (
+            <PortalLinkErrorModal
+              isOpen={portalErrorState.isOpen}
+              onClose={() => setPortalErrorState((prev) => ({ ...prev, isOpen: false }))}
+              errorType={portalErrorState.errorType}
+              opportunityTitle={portalErrorState.opportunityTitle}
+              organization={portalErrorState.organization}
+              targetUrl={portalErrorState.targetUrl}
+              officialHomepageUrl={portalErrorState.officialHomepageUrl}
+              opportunityId={portalErrorState.opportunityId}
+              applicationId={portalErrorState.applicationId}
+              onViewDetails={() => {
+                setPortalErrorState((prev) => ({ ...prev, isOpen: false }));
+                if (portalErrorState.opportunityId) {
+                  const opp = opportunities.find((o) => o._id === portalErrorState.opportunityId);
+                  if (opp) handleSelectOpportunity(opp);
+                }
+              }}
+            />
+          )}
         </div>
       )}
     </div>

@@ -12,7 +12,8 @@ export function CataloguePage({
   onSelectOpportunity,
   savedMap,
   onToggleSave,
-  onOpenReminder
+  onOpenReminder,
+  onApplyNow,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
@@ -199,6 +200,7 @@ export function CataloguePage({
             savedStatus={savedMap[opp._id]?.status}
             onToggleSave={onToggleSave}
             onSetReminder={onOpenReminder}
+            onApplyNow={onApplyNow}
           />
         ))}
       </div>

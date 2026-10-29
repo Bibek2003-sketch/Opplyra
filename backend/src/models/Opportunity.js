@@ -51,6 +51,36 @@ const opportunitySchema = new mongoose.Schema({
     type: String,
     required: [true, 'Original source URL is required'],
   },
+  officialHomepageUrl: {
+    type: String,
+    default: null,
+  },
+  sourceDomain: {
+    type: String,
+    default: null,
+  },
+  urlVerificationStatus: {
+    type: String,
+    enum: ['verified', 'needs_review', 'unavailable'],
+    default: 'verified',
+  },
+  verifiedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  lastHealthCheckAt: {
+    type: Date,
+    default: null,
+  },
+  lastHealthStatus: {
+    type: String,
+    enum: ['available', 'access_restricted', 'not_found', 'unavailable', 'network_problem', 'redirect_problem', 'unknown', 'pending'],
+    default: 'pending',
+  },
+  brokenLinkReportCount: {
+    type: Number,
+    default: 0,
+  },
   sourceTimestamp: {
     type: Date,
     default: Date.now,

@@ -5,10 +5,9 @@ import {
   ShieldAlert,
   BookmarkCheck,
   BellRing,
+  Bell,
   ChevronRight,
-  X,
-  Home,
-  LogOut
+  X
 } from 'lucide-react';
 
 export function Sidebar({
@@ -21,7 +20,8 @@ export function Sidebar({
   profile,
   onOpenProfile,
   onNavigateToLanding,
-  onLogout
+  onLogout,
+  unreadNotificationsCount = 0
 }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,6 +29,7 @@ export function Sidebar({
     { id: 'verification', label: 'Check for Scams', icon: ShieldAlert },
     { id: 'tracker', label: 'My Applications', icon: BookmarkCheck },
     { id: 'reminders', label: 'Deadlines & Reminders', icon: BellRing },
+    { id: 'notifications', label: 'Notifications', icon: Bell, badge: unreadNotificationsCount },
   ];
 
   return (
@@ -51,11 +52,18 @@ export function Sidebar({
         {/* Brand Header & Navigation */}
         <div>
           <div className="p-4 border-b border-[rgba(255,255,255,0.10)] bg-[rgba(14,12,21,0.55)] flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 px-2 py-1 select-none">
+            <div
+              onClick={() => {
+                if (onClose) onClose();
+                if (onNavigateToLanding) onNavigateToLanding();
+              }}
+              className="flex items-center gap-2.5 px-2 py-1 select-none cursor-pointer group"
+              title="Opplyra Home"
+            >
               <img
                 src="/brand-mark.png"
                 alt="Opplyra Emblem"
-                className="w-8 h-8 object-contain drop-shadow-[0_0_12px_rgba(167,139,250,0.5)]"
+                className="w-8 h-8 object-contain drop-shadow-[0_0_12px_rgba(167,139,250,0.5)] transition-transform duration-300 group-hover:scale-105"
               />
               <span className="font-display font-black text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-[#F3E8FF] to-[#C4B5FD]">
                 Opplyra
@@ -96,64 +104,61 @@ export function Sidebar({
                     <Icon className={`w-4 h-4 ${isActive ? 'text-[#A78BFA]' : 'text-[#92899F]'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {isActive && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] shadow-[0_0_8px_#A78BFA]" />
-                  )}
+                  <div className="flex items-center gap-2">
+                    {item.badge > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#EC4899] text-white text-[10px] font-bold shadow-sm">
+                        {item.badge > 99 ? '99+' : item.badge}
+                      </span>
+                    )}
+                    {isActive && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] shadow-[0_0_8px_#A78BFA]" />
+                    )}
+                  </div>
                 </button>
               );
             })}
           </nav>
         </div>
 
-        {/* Student Profile & Auth Controls (Glass Surface) */}
-        <div className="p-3.5 border-t border-[rgba(255,255,255,0.10)] bg-[rgba(14,12,21,0.55)] space-y-2">
-          <div
-            onClick={onOpenProfile}
-            className="group glass-card glass-card-interactive rounded-2xl p-3 cursor-pointer transition-all duration-200 border border-[rgba(255,255,255,0.12)] shadow-glass"
+        {/* Student Profile Nav Item */}
+        <div className="p-3.5 border-t border-[rgba(255,255,255,0.10)] bg-[rgba(14,12,21,0.55)]">
+          <button
+            type="button"
+            onClick={() => {
+              if (onClose) onClose();
+              if (onOpenProfile) onOpenProfile();
+            }}
+            className={`w-full group rounded-2xl p-3 text-left transition-all duration-200 border cursor-pointer ${
+              activeTab === 'profile'
+                ? 'bg-[#7C3AED]/20 border-[#7C3AED]/50 text-white shadow-[0_0_15px_rgba(124,58,237,0.25)]'
+                : 'bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.06)] border-[rgba(255,255,255,0.10)] hover:border-[rgba(167,139,250,0.30)] text-[#F7F5FC]'
+            }`}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 truncate">
-                <div className="w-8 h-8 rounded-xl bg-[#7C3AED]/20 text-[#C4B5FD] border border-[#7C3AED]/40 flex items-center justify-center font-bold text-xs shrink-0 font-display">
-                  {profile?.fullName ? profile.fullName.charAt(0) : 'P'}
-                </div>
+              <div className="flex items-center gap-2.5 min-w-0">
+                {profile?.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.fullName || 'User avatar'}
+                    className="w-8 h-8 rounded-xl object-cover border border-[#7C3AED]/40 shrink-0"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-xl bg-[#7C3AED]/20 text-[#C4B5FD] border border-[#7C3AED]/40 flex items-center justify-center font-bold text-xs shrink-0 font-display">
+                    {profile?.fullName ? profile.fullName.charAt(0) : 'P'}
+                  </div>
+                )}
                 <div className="truncate">
                   <div className="text-xs font-bold text-[#F7F5FC] group-hover:text-[#C4B5FD] transition-colors truncate">
                     {profile?.fullName || 'My Profile'}
                   </div>
                   <div className="text-[11px] text-[#B7B0C7] truncate font-medium">
-                    {profile?.course || 'Set up your details'}
+                    {profile?.course || 'Manage profile & account'}
                   </div>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-[#92899F] group-hover:text-[#A78BFA] transition-colors shrink-0" />
+              <ChevronRight className={`w-4 h-4 transition-colors shrink-0 ml-1.5 ${activeTab === 'profile' ? 'text-[#C4B5FD]' : 'text-[#92899F] group-hover:text-[#A78BFA]'}`} />
             </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 pt-1 text-xs">
-            <button
-              onClick={() => {
-                if (onClose) onClose();
-                if (onNavigateToLanding) onNavigateToLanding();
-              }}
-              className="flex-1 py-1.5 px-2.5 rounded-xl border border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.18)] bg-[rgba(255,255,255,0.03)] text-[#B7B0C7] hover:text-white flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              title="Visit Public Landing Page"
-            >
-              <Home className="w-3.5 h-3.5 text-[#A78BFA]" />
-              <span>Public Home</span>
-            </button>
-
-            <button
-              onClick={() => {
-                if (onClose) onClose();
-                if (onLogout) onLogout();
-              }}
-              className="py-1.5 px-2.5 rounded-xl border border-[rgba(255,255,255,0.08)] hover:border-[#FB7185]/40 bg-[rgba(255,255,255,0.03)] text-[#91899F] hover:text-[#FB7185] flex items-center justify-center gap-1 transition-colors cursor-pointer"
-              title="Log Out"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Log Out</span>
-            </button>
-          </div>
+          </button>
         </div>
       </aside>
     </>

@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { X, Bell, Calendar } from 'lucide-react';
 
 export function ReminderModal({ isOpen, onClose, opportunity, onSaveReminder }) {
-  if (!isOpen || !opportunity) return null;
-
   const [offset, setOffset] = useState('1_day_before');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!opportunity) return;
     setIsSubmitting(true);
     try {
       await onSaveReminder(opportunity._id, offset);
@@ -19,6 +18,8 @@ export function ReminderModal({ isOpen, onClose, opportunity, onSaveReminder }) 
       setIsSubmitting(false);
     }
   };
+
+  if (!isOpen || !opportunity) return null;
 
   const deadlineDate = new Date(opportunity.deadline);
 
