@@ -135,3 +135,6 @@ scratch/
 **/scratch/
 .system_generated/
 **/.system_generated/
+
+frontend/node_modules/
+node_modules/
