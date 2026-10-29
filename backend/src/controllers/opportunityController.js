@@ -70,6 +70,7 @@ async function getOpportunityById(req, res) {
   try {
     const { id } = req.params;
     const { mode } = getDbStatus();
+    const activeUserId = req.headers['x-user-id'] || req.user?.id || null;
 
     let opportunity = null;
     let studentProfile = null;
@@ -84,16 +85,18 @@ async function getOpportunityById(req, res) {
           .json({ success: false, message: "Opportunity not found." });
       }
 
-      studentProfile = await Profile.findOne({
-        userId: "default_student_user",
-      });
-      const savedDoc = await SavedOpportunity.findOne({
-        opportunityId: id,
-        userId: "default_student_user",
-      });
-      if (savedDoc) {
-        isSaved = true;
-        savedStatus = savedDoc.status;
+      if (activeUserId) {
+        studentProfile = await Profile.findOne({
+          userId: activeUserId,
+        });
+        const savedDoc = await SavedOpportunity.findOne({
+          opportunityId: id,
+          userId: activeUserId,
+        });
+        if (savedDoc) {
+          isSaved = true;
+          savedStatus = savedDoc.status;
+        }
       }
     } else {
       opportunity = memoryStore.getOpportunityById(id);
@@ -102,11 +105,13 @@ async function getOpportunityById(req, res) {
           .status(404)
           .json({ success: false, message: "Opportunity not found." });
       }
-      studentProfile = memoryStore.getProfile();
-      const savedDoc = memoryStore.isSaved(id);
-      if (savedDoc) {
-        isSaved = true;
-        savedStatus = savedDoc.status;
+      if (activeUserId) {
+        studentProfile = memoryStore.getProfile(activeUserId);
+        const savedDoc = memoryStore.isSaved(id, activeUserId);
+        if (savedDoc) {
+          isSaved = true;
+          savedStatus = savedDoc.status;
+        }
       }
     }
 
@@ -135,6 +140,7 @@ async function getOpportunityById(req, res) {
 async function getDashboardSummary(req, res) {
   try {
     const { mode } = getDbStatus();
+    const activeUserId = req.headers['x-user-id'] || req.user?.id || null;
     let totalCount = 0;
     let savedCount = 0;
     let inProgressCount = 0;
@@ -143,9 +149,12 @@ async function getDashboardSummary(req, res) {
 
     if (mode === "mongodb") {
       totalCount = await Opportunity.countDocuments();
-      const savedList = await SavedOpportunity.find({
-        userId: "default_student_user",
-      });
+      let savedList = [];
+      if (activeUserId) {
+        savedList = await SavedOpportunity.find({
+          userId: activeUserId,
+        });
+      }
       savedCount = savedList.length;
       inProgressCount = savedList.filter((s) =>
         ["Interested", "Preparing", "Applied"].includes(s.status),
@@ -166,7 +175,7 @@ async function getDashboardSummary(req, res) {
     } else {
       const all = memoryStore.opportunities;
       totalCount = all.length;
-      const savedList = memoryStore.getSaved();
+      const savedList = activeUserId ? memoryStore.getSaved(activeUserId) : [];
       savedCount = savedList.length;
       inProgressCount = savedList.filter((s) =>
         ["Interested", "Preparing", "Applied"].includes(s.status),

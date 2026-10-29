@@ -60,9 +60,10 @@ async function register(req, res) {
 
       // Synchronize with student profile
       await Profile.findOneAndUpdate(
-        { userId: 'default_student_user' },
+        { userId: user._id.toString() },
         {
           $set: {
+            userId: user._id.toString(),
             fullName: cleanName,
             course: cleanCourse,
             academicYear: cleanYear,
@@ -114,7 +115,7 @@ async function register(req, res) {
       fullName: cleanName,
       course: cleanCourse,
       academicYear: cleanYear,
-    });
+    }, user._id);
 
     return res.status(201).json({
       success: true,

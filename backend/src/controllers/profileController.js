@@ -97,15 +97,15 @@ async function getProfile(req, res) {
 
     // Memory Store mode
     const memUser = memoryStore.findUserById(userId) || memoryStore.findUserByEmail(userEmail) || memoryStore.users[0];
-    const memProfile = memoryStore.getProfile();
+    const memProfile = memoryStore.getProfile(userId);
 
     const merged = {
       id: memUser ? memUser._id : 'default_student_user',
       _id: memUser ? memUser._id : 'default_student_user',
       email: memUser ? memUser.email : userEmail,
-      fullName: memProfile.fullName || memUser?.fullName || 'Priya Sharma',
-      course: memProfile.course || memUser?.course || 'B.Tech Computer Science',
-      academicYear: memProfile.academicYear || memUser?.academicYear || '3rd Year',
+      fullName: memUser?.fullName || memProfile.fullName || 'Priya Sharma',
+      course: memUser?.course || memProfile.course || 'B.Tech Computer Science',
+      academicYear: memUser?.academicYear || memProfile.academicYear || '3rd Year',
       phone: memProfile.phone || memUser?.phone || '+91 98765 43210',
       city: memProfile.city || memUser?.city || 'Bengaluru',
       state: memProfile.state || memUser?.state || 'Karnataka',
@@ -220,13 +220,13 @@ async function updateProfile(req, res) {
     }
 
     // Memory Store update
-    memoryStore.updateProfile(updateData);
+    memoryStore.updateProfile(updateData, userId);
     if (userId) {
       memoryStore.updateUser(userId, updateData);
     }
 
     const updated = {
-      ...memoryStore.getProfile(),
+      ...memoryStore.getProfile(userId),
       email: userEmail,
       id: userId,
     };

@@ -9,7 +9,6 @@ const notificationService = require('../services/notificationService');
  */
 function isNotificationOwner(recordUserId, authUserId) {
   if (!recordUserId || !authUserId) return false;
-  if (recordUserId === 'default_student_user' || authUserId === 'default_student_user') return true;
   return recordUserId.toString() === authUserId.toString();
 }
 

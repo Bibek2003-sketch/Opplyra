@@ -6,11 +6,12 @@ const memoryStore = require("../services/memoryStore");
 // List all saved opportunities for user
 async function getSavedOpportunities(req, res) {
   try {
+    const userId = req.user?.id || req.headers['x-user-id'] || 'default_student_user';
     const { status } = req.query;
     const { mode } = getDbStatus();
 
     if (mode === "mongodb") {
-      const filter = { userId: "default_student_user" };
+      const filter = { userId };
       if (status && status !== "All") {
         filter.status = status;
       }
@@ -37,7 +38,7 @@ async function getSavedOpportunities(req, res) {
     }
 
     // Memory Store
-    let list = memoryStore.getSaved();
+    let list = memoryStore.getSaved(userId);
     if (status && status !== "All") {
       list = list.filter(
         (s) => s.status.toLowerCase() === status.toLowerCase(),
@@ -63,6 +64,7 @@ async function getSavedOpportunities(req, res) {
 // Save or toggle an opportunity
 async function saveOpportunity(req, res) {
   try {
+    const userId = req.user?.id || req.headers['x-user-id'] || 'default_student_user';
     const { opportunityId, status = "Interested", notes = "" } = req.body;
     if (!opportunityId) {
       return res.status(400).json({
@@ -83,7 +85,7 @@ async function saveOpportunity(req, res) {
       }
 
       let saved = await SavedOpportunity.findOne({
-        userId: "default_student_user",
+        userId,
         opportunityId,
       });
 
@@ -95,7 +97,7 @@ async function saveOpportunity(req, res) {
         await saved.save();
       } else {
         saved = await SavedOpportunity.create({
-          userId: "default_student_user",
+          userId,
           opportunityId,
           status,
           notes,
@@ -116,7 +118,7 @@ async function saveOpportunity(req, res) {
     }
 
     // Memory Store
-    const savedItem = memoryStore.saveOpportunity(opportunityId, status, notes);
+    const savedItem = memoryStore.saveOpportunity(opportunityId, status, notes, userId);
     if (!savedItem) {
       return res
         .status(404)
@@ -141,6 +143,7 @@ async function saveOpportunity(req, res) {
 // Update application status
 async function updateSavedStatus(req, res) {
   try {
+    const userId = req.user?.id || req.headers['x-user-id'] || 'default_student_user';
     const { opportunityId } = req.params;
     const { status, notes } = req.body;
 
@@ -156,7 +159,7 @@ async function updateSavedStatus(req, res) {
 
     if (mode === "mongodb") {
       const saved = await SavedOpportunity.findOne({
-        userId: "default_student_user",
+        userId,
         opportunityId,
       });
 
@@ -183,7 +186,7 @@ async function updateSavedStatus(req, res) {
     }
 
     // Memory Store
-    const updated = memoryStore.updateSavedStatus(opportunityId, status, notes);
+    const updated = memoryStore.updateSavedStatus(opportunityId, status, notes, userId);
     if (!updated) {
       return res.status(404).json({
         success: false,
@@ -209,12 +212,13 @@ async function updateSavedStatus(req, res) {
 // Remove from saved
 async function removeSavedOpportunity(req, res) {
   try {
+    const userId = req.user?.id || req.headers['x-user-id'] || 'default_student_user';
     const { opportunityId } = req.params;
     const { mode } = getDbStatus();
 
     if (mode === "mongodb") {
       const result = await SavedOpportunity.findOneAndDelete({
-        userId: "default_student_user",
+        userId,
         opportunityId,
       });
 
@@ -231,7 +235,7 @@ async function removeSavedOpportunity(req, res) {
     }
 
     // Memory Store
-    const removed = memoryStore.removeSaved(opportunityId);
+    const removed = memoryStore.removeSaved(opportunityId, userId);
     if (!removed) {
       return res
         .status(404)

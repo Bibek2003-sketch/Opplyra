@@ -36,6 +36,11 @@ class MemoryStore {
       updatedAt: new Date(),
     };
 
+    this.profiles = {
+      default_student_user: { ...this.profile },
+      mem_user_default: { ...this.profile },
+    };
+
     this.users = [
       {
         _id: "mem_user_default",
@@ -277,22 +282,49 @@ class MemoryStore {
   }
 
   // Profile
-  getProfile() {
+  getProfile(userId = 'default_student_user') {
+    const key = userId || 'default_student_user';
+    if (this.profiles && this.profiles[key]) {
+      return { ...this.profiles[key] };
+    }
+    const user = this.findUserById(key) || this.findUserByEmail(key);
+    if (user) {
+      if (!this.profiles) this.profiles = {};
+      this.profiles[key] = {
+        ...this.profile,
+        userId: user._id || key,
+        fullName: user.fullName || this.profile.fullName,
+        course: user.course || this.profile.course,
+        academicYear: user.academicYear || this.profile.academicYear,
+        updatedAt: new Date(),
+      };
+      return { ...this.profiles[key] };
+    }
     return { ...this.profile };
   }
 
-  updateProfile(data) {
-    this.profile = {
-      ...this.profile,
+  updateProfile(data, userId = 'default_student_user') {
+    const key = userId || 'default_student_user';
+    if (!this.profiles) this.profiles = {};
+    const current = this.getProfile(key);
+    this.profiles[key] = {
+      ...current,
       ...data,
       updatedAt: new Date(),
     };
-    return this.profile;
+    if (key === 'default_student_user' || key === 'mem_user_default') {
+      this.profile = { ...this.profiles[key] };
+    }
+    return this.profiles[key];
   }
 
   // Saved Opportunities
-  getSaved() {
-    return this.saved.map((s) => {
+  getSaved(userId = null) {
+    let list = this.saved;
+    if (userId && userId !== 'default_student_user') {
+      list = list.filter((s) => s.userId === userId);
+    }
+    return list.map((s) => {
       const opp = this.getOpportunityById(s.opportunityId) || s.opportunity;
       return {
         ...s,
@@ -301,12 +333,13 @@ class MemoryStore {
     });
   }
 
-  saveOpportunity(opportunityId, status = "Interested", notes = "") {
+  saveOpportunity(opportunityId, status = "Interested", notes = "", userId = "default_student_user") {
     const opp = this.getOpportunityById(opportunityId);
     if (!opp) return null;
 
+    const targetUserId = userId || "default_student_user";
     const existingIdx = this.saved.findIndex(
-      (s) => s.opportunityId.toString() === opportunityId.toString(),
+      (s) => s.opportunityId.toString() === opportunityId.toString() && (s.userId === targetUserId || targetUserId === 'default_student_user'),
     );
     if (existingIdx >= 0) {
       this.saved[existingIdx].status = status;
@@ -319,7 +352,7 @@ class MemoryStore {
       _id: `mem_save_${Date.now()}`,
       opportunityId,
       opportunity: opp,
-      userId: "default_student_user",
+      userId: targetUserId,
       status,
       notes,
       savedAt: new Date(),
@@ -329,9 +362,10 @@ class MemoryStore {
     return newSave;
   }
 
-  updateSavedStatus(opportunityId, status, notes) {
+  updateSavedStatus(opportunityId, status, notes, userId = "default_student_user") {
+    const targetUserId = userId || "default_student_user";
     const item = this.saved.find(
-      (s) => s.opportunityId.toString() === opportunityId.toString(),
+      (s) => s.opportunityId.toString() === opportunityId.toString() && (s.userId === targetUserId || targetUserId === 'default_student_user'),
     );
     if (!item) return null;
     if (status) item.status = status;
@@ -340,25 +374,30 @@ class MemoryStore {
     return item;
   }
 
-  removeSaved(opportunityId) {
+  removeSaved(opportunityId, userId = "default_student_user") {
+    const targetUserId = userId || "default_student_user";
     const beforeCount = this.saved.length;
     this.saved = this.saved.filter(
-      (s) => s.opportunityId.toString() !== opportunityId.toString(),
+      (s) => !(s.opportunityId.toString() === opportunityId.toString() && (s.userId === targetUserId || targetUserId === 'default_student_user')),
     );
     return this.saved.length < beforeCount;
   }
 
-  isSaved(opportunityId) {
+  isSaved(opportunityId, userId = null) {
     return (
       this.saved.find(
-        (s) => s.opportunityId.toString() === opportunityId.toString(),
+        (s) => s.opportunityId.toString() === opportunityId.toString() && (!userId || s.userId === userId || userId === 'default_student_user'),
       ) || null
     );
   }
 
   // Reminders
-  getReminders() {
-    return this.reminders.map((r) => {
+  getReminders(userId = null) {
+    let list = this.reminders;
+    if (userId && userId !== 'default_student_user') {
+      list = list.filter((r) => r.userId === userId);
+    }
+    return list.map((r) => {
       const opp = this.getOpportunityById(r.opportunityId) || r.opportunity;
       return {
         ...r,
@@ -367,7 +406,7 @@ class MemoryStore {
     });
   }
 
-  createReminder(opportunityId, offset) {
+  createReminder(opportunityId, offset, userId = "default_student_user") {
     const opp = this.getOpportunityById(opportunityId);
     if (!opp) return null;
 
@@ -383,13 +422,15 @@ class MemoryStore {
     }
 
     const triggerAt = new Date(Math.max(Date.now(), deadline - offsetMs));
+    const targetUserId = userId || "default_student_user";
 
     // Remove existing with same offset if present
     this.reminders = this.reminders.filter(
       (r) =>
         !(
           r.opportunityId.toString() === opportunityId.toString() &&
-          r.offset === offset
+          r.offset === offset &&
+          (r.userId === targetUserId || targetUserId === 'default_student_user')
         ),
     );
 
@@ -397,7 +438,7 @@ class MemoryStore {
       _id: `mem_rem_${Date.now()}`,
       opportunityId,
       opportunity: opp,
-      userId: "default_student_user",
+      userId: targetUserId,
       offset,
       offsetLabel: label,
       triggerAt,
@@ -408,10 +449,10 @@ class MemoryStore {
     return reminder;
   }
 
-  deleteReminder(reminderId) {
+  deleteReminder(reminderId, userId = null) {
     const before = this.reminders.length;
     this.reminders = this.reminders.filter(
-      (r) => r._id.toString() !== reminderId.toString(),
+      (r) => !(r._id.toString() === reminderId.toString() && (!userId || r.userId === userId || userId === 'default_student_user')),
     );
     return this.reminders.length < before;
   }

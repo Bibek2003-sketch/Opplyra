@@ -199,15 +199,28 @@ export default function App() {
     setIsAuthModalOpen(true);
   };
 
-  const handleAuthSuccess = (userData) => {
+  const handleAuthSuccess = async (userData) => {
     setIsAuthenticated(true);
     setCurrentUser(userData);
     navigateToApp('dashboard');
     showToast(`Welcome to Opplyra, ${userData.fullName.split(' ')[0]}!`);
+    await loadUserData();
+    api.getDashboardSummary().then((sumRes) => {
+      if (sumRes?.data) setSummary(sumRes.data);
+    }).catch(() => {});
   };
 
   const handleRequestLogout = () => {
     setIsLogoutModalOpen(true);
+  };
+
+  const clearUserData = () => {
+    setSavedItems([]);
+    setReminders([]);
+    setProfile(null);
+    setApplications([]);
+    setApplicationSummary(null);
+    setUnreadNotificationsCount(0);
   };
 
   const handleConfirmLogout = () => {
@@ -215,12 +228,40 @@ export default function App() {
     localStorage.removeItem('opplyra_auth');
     setIsAuthenticated(false);
     setCurrentUser(null);
+    clearUserData();
     navigateToLanding();
     showToast('You have been logged out successfully.');
+    api.getDashboardSummary().then((sumRes) => {
+      if (sumRes?.data) setSummary(sumRes.data);
+    }).catch(() => {});
   };
 
   const handleOpenLegal = (type = 'privacy') => {
     setLegalModalState({ isOpen: true, type });
+  };
+
+  const loadUserData = async () => {
+    try {
+      const [savedRes, remRes, profRes, appsRes, appSumRes, unreadRes] = await Promise.all([
+        api.getSaved().catch(() => ({ data: [] })),
+        api.getReminders().catch(() => ({ data: [] })),
+        api.getProfile().catch(() => ({ data: null })),
+        api.getApplications().catch(() => ({ data: [] })),
+        api.getApplicationSummary().catch(() => ({ data: null })),
+        api.getUnreadNotificationCount().catch(() => ({ count: 0 })),
+      ]);
+
+      setSavedItems(savedRes.data || []);
+      setReminders(remRes.data || []);
+      if (profRes.data) setProfile(profRes.data);
+      setApplications(appsRes.data || []);
+      setApplicationSummary(appSumRes.data || null);
+      if (unreadRes && typeof unreadRes.count === 'number') {
+        setUnreadNotificationsCount(unreadRes.count);
+      }
+    } catch (err) {
+      console.warn('Failed to load user-specific data:', err);
+    }
   };
 
   // Initial Data Fetch
@@ -228,26 +269,21 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const [oppsRes, sumRes, savedRes, remRes, profRes, appsRes, appSumRes, unreadRes] = await Promise.all([
+      const [oppsRes, sumRes] = await Promise.all([
         api.getOpportunities(),
         api.getDashboardSummary(),
-        api.getSaved(),
-        api.getReminders(),
-        api.getProfile(),
-        api.getApplications(),
-        api.getApplicationSummary(),
-        api.getUnreadNotificationCount().catch(() => ({ count: 0 })),
       ]);
 
       setOpportunities(oppsRes.data || []);
       setSummary(sumRes.data || null);
-      setSavedItems(savedRes.data || []);
-      setReminders(remRes.data || []);
-      setProfile(profRes.data || null);
-      setApplications(appsRes.data || []);
-      setApplicationSummary(appSumRes.data || null);
-      if (unreadRes && typeof unreadRes.count === 'number') {
-        setUnreadNotificationsCount(unreadRes.count);
+
+      const stored = localStorage.getItem('opplyra_auth');
+      const isUserAuth = Boolean(stored && JSON.parse(stored)?.isAuthenticated);
+
+      if (isUserAuth) {
+        await loadUserData();
+      } else {
+        clearUserData();
       }
     } catch (err) {
       console.error('Initial load failure:', err);
@@ -345,6 +381,14 @@ export default function App() {
     // 1. Open verified portal safely in a new browser tab
     window.open(url, '_blank', 'noopener,noreferrer');
 
+    // If not authenticated, open official portal and prompt student to log in to track
+    if (!isAuthenticated) {
+      setAuthModalMode('login');
+      setIsAuthModalOpen(true);
+      showToast('Opened official portal! Sign in to track your application and deadlines.');
+      return;
+    }
+
     // 2. Initialize tracking record as Application Started (NOT Applied)
     try {
       const res = await api.createApplication({
@@ -414,6 +458,21 @@ export default function App() {
     loadInitialData();
   }, []);
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      if (localStorage.getItem('opplyra_auth')) {
+        localStorage.removeItem('opplyra_auth');
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        clearUserData();
+        navigateToLanding();
+        showToast('Your session has expired. Please sign in again.', 'error');
+      }
+    };
+    window.addEventListener('opplyra:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('opplyra:unauthorized', handleUnauthorized);
+  }, []);
+
   const savedMap = savedItems.reduce((acc, item) => {
     const oppId = item.opportunityId?._id || item.opportunityId || item._id;
     acc[oppId] = item;
@@ -421,6 +480,12 @@ export default function App() {
   }, {});
 
   const handleToggleSave = async (opportunityId) => {
+    if (!isAuthenticated) {
+      setAuthModalMode('login');
+      setIsAuthModalOpen(true);
+      showToast('Please sign in to save opportunities and track applications.', 'error');
+      return;
+    }
     const existing = savedMap[opportunityId];
     try {
       if (existing) {
@@ -437,6 +502,16 @@ export default function App() {
     } catch (err) {
       showToast(err.message || 'Could not update saved status.', 'error');
     }
+  };
+
+  const handleOpenReminder = (opp) => {
+    if (!isAuthenticated) {
+      setAuthModalMode('login');
+      setIsAuthModalOpen(true);
+      showToast('Please sign in to configure deadline reminders.', 'error');
+      return;
+    }
+    setReminderTargetOpp(opp);
   };
 
   const handleUpdateStatus = async (opportunityId, newStatus, notes) => {
@@ -648,7 +723,7 @@ export default function App() {
                   onSelectOpportunity={handleSelectOpportunity}
                   savedMap={savedMap}
                   onToggleSave={handleToggleSave}
-                  onOpenReminder={(opp) => setReminderTargetOpp(opp)}
+                  onOpenReminder={handleOpenReminder}
                   onApplyNow={handleApplyNow}
                 />
               )}
@@ -664,7 +739,7 @@ export default function App() {
                   onSelectOpportunity={handleSelectOpportunity}
                   savedMap={savedMap}
                   onToggleSave={handleToggleSave}
-                  onOpenReminder={(opp) => setReminderTargetOpp(opp)}
+                  onOpenReminder={handleOpenReminder}
                   onApplyNow={handleApplyNow}
                 />
               )}
@@ -678,7 +753,7 @@ export default function App() {
                   onUpdateStatus={(app) => setStatusTargetApp(app)}
                   onConfirmSubmission={(app) => setConfirmationTargetApp(app)}
                   onDeleteApplication={handleDeleteApplication}
-                  onOpenReminder={(opp) => setReminderTargetOpp(opp)}
+                  onOpenReminder={handleOpenReminder}
                   onSelectOpportunity={(app) => setTimelineTargetApp(app)}
                   onNavigate={handleNavigate}
                   onOpenPreferences={() => setIsPreferencesModalOpen(true)}
@@ -722,7 +797,7 @@ export default function App() {
             opportunities={opportunities}
             savedItems={savedItems}
             onSelectOpportunity={handleSelectOpportunity}
-            onOpenReminder={(opp) => setReminderTargetOpp(opp)}
+            onOpenReminder={handleOpenReminder}
             onNavigate={handleNavigate}
           />
 
@@ -740,7 +815,7 @@ export default function App() {
               onUpdateStatus={handleUpdateStatus}
               onOpenReminder={(opp) => {
                 setIsOpportunityModalOpen(false);
-                setReminderTargetOpp(opp);
+                handleOpenReminder(opp);
               }}
               onOpenProfile={() => {
                 setIsOpportunityModalOpen(false);

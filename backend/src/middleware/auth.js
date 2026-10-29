@@ -19,26 +19,18 @@ async function authenticateUser(req, res, next) {
       userId = token;
     }
 
-    // Dev/Demo fallback if not logged in
     if (!userId) {
-      userId = 'default_student_user';
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please sign in to access this feature.',
+      });
     }
 
     const { mode } = getDbStatus();
     let user = null;
 
     if (mode === 'mongodb') {
-      // Try finding by _id or email
-      if (userId !== 'default_student_user') {
-        try {
-          user = await User.findById(userId);
-        } catch {
-          user = await User.findOne({ email: userId });
-        }
-      }
-
-      if (!user) {
-        // Fallback default student in DB
+      if (userId === 'default_student_user') {
         user = await User.findOne({ email: 'priya.sharma@college.edu' });
         if (!user) {
           user = {
@@ -49,18 +41,26 @@ async function authenticateUser(req, res, next) {
             role: 'student',
           };
         }
+      } else {
+        try {
+          user = await User.findById(userId);
+        } catch {
+          user = await User.findOne({ email: userId });
+        }
       }
     } else {
-      user = memoryStore.findUserById(userId) || memoryStore.findUserByEmail(userId);
-      if (!user) {
-        user = memoryStore.users[0] || {
-          _id: 'default_student_user',
-          id: 'default_student_user',
-          email: 'priya.sharma@college.edu',
-          fullName: 'Priya Sharma',
-          role: 'student',
-        };
+      if (userId === 'default_student_user') {
+        user = memoryStore.users[0];
+      } else {
+        user = memoryStore.findUserById(userId) || memoryStore.findUserByEmail(userId);
       }
+    }
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid student session or user not found. Please log in again.',
+      });
     }
 
     req.user = {

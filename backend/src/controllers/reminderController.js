@@ -12,10 +12,11 @@ const OFFSET_MAP = {
 // Retrieve all reminders configured by student
 async function getReminders(req, res) {
   try {
+    const userId = req.user?.id || req.headers['x-user-id'] || 'default_student_user';
     const { mode } = getDbStatus();
 
     if (mode === 'mongodb') {
-      const reminders = await Reminder.find({ userId: 'default_student_user' })
+      const reminders = await Reminder.find({ userId })
         .populate('opportunityId')
         .sort({ triggerAt: 1 });
 
@@ -49,7 +50,7 @@ async function getReminders(req, res) {
 
     // Memory Store
     const now = Date.now();
-    const list = memoryStore.getReminders().map(r => {
+    const list = memoryStore.getReminders(userId).map(r => {
       let currentStatus = r.status;
       if (currentStatus === 'Scheduled' && new Date(r.triggerAt).getTime() <= now) {
         currentStatus = 'Simulated_Delivered';
@@ -75,6 +76,7 @@ async function getReminders(req, res) {
 // Create or update a deadline reminder
 async function createReminder(req, res) {
   try {
+    const userId = req.user?.id || req.headers['x-user-id'] || 'default_student_user';
     const { opportunityId, offset } = req.body;
 
     if (!opportunityId || !offset) {
@@ -104,7 +106,7 @@ async function createReminder(req, res) {
       const triggerAt = new Date(Math.max(Date.now(), deadlineMs - offsetConfig.ms));
 
       const reminder = await Reminder.findOneAndUpdate(
-        { userId: 'default_student_user', opportunityId, offset },
+        { userId, opportunityId, offset },
         {
           $set: {
             offsetLabel: offsetConfig.label,
@@ -124,7 +126,7 @@ async function createReminder(req, res) {
     }
 
     // Memory Store
-    const reminder = memoryStore.createReminder(opportunityId, offset);
+    const reminder = memoryStore.createReminder(opportunityId, offset, userId);
     if (!reminder) {
       return res.status(404).json({ success: false, message: 'Opportunity not found.' });
     }
@@ -143,18 +145,19 @@ async function createReminder(req, res) {
 // Delete reminder
 async function deleteReminder(req, res) {
   try {
+    const userId = req.user?.id || req.headers['x-user-id'] || 'default_student_user';
     const { id } = req.params;
     const { mode } = getDbStatus();
 
     if (mode === 'mongodb') {
-      const result = await Reminder.findByIdAndDelete(id);
+      const result = await Reminder.findOneAndDelete({ _id: id, userId });
       if (!result) {
         return res.status(404).json({ success: false, message: 'Reminder record not found.' });
       }
       return res.json({ success: true, message: 'Reminder deleted.' });
     }
 
-    const deleted = memoryStore.deleteReminder(id);
+    const deleted = memoryStore.deleteReminder(id, userId);
     if (!deleted) {
       return res.status(404).json({ success: false, message: 'Reminder record not found.' });
     }

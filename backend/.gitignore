@@ -16,6 +16,7 @@ logs/
 
 # Database & runtime
 mongo-data/
-data/
+/data/
+!src/data/
 dump/
 

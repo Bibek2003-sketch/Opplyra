@@ -3,9 +3,11 @@
  * Uses backend at 127.0.0.1:5005 directly with CORS fallback to /api proxy
  */
 
-const API_BASE = (window.location.port === '5173' || window.location.port === '5174')
-  ? 'http://127.0.0.1:5005/api'
-  : '/api';
+const API_BASE = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:5005/api'
+    : '/api'
+);
 
 function getAuthHeaders() {
   try {
@@ -37,6 +39,9 @@ async function request(endpoint, options = {}) {
     const res = await fetch(`${API_BASE}${endpoint}`, config);
     const data = await res.json();
     if (!res.ok) {
+      if (res.status === 401 && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('opplyra:unauthorized'));
+      }
       throw new Error(data.message || `HTTP error ${res.status}`);
     }
     return data;
@@ -202,6 +207,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  getVerificationExamples: () => request('/verification/examples'),
 
   // Deadline Reminders
   getReminders: () => request('/reminders'),

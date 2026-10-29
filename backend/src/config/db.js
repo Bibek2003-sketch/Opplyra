@@ -45,6 +45,11 @@ async function connectDB() {
   }
 
   if (!dbState.isConnected) {
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_IN_MEMORY_FALLBACK !== 'true') {
+      const errMsg = `[Database FATAL] MongoDB persistent connection failed in production mode (${dbState.lastError}). In-memory fallback is disabled in production to prevent silent data loss.`;
+      console.error(errMsg);
+      throw new Error(errMsg);
+    }
     dbState.mode = 'memory';
     dbState.connectionTarget = 'in-memory-fallback';
     console.warn(`[Database] MongoDB persistent service unavailable. Activated In-Memory Dev Fallback (Non-durable).`);
