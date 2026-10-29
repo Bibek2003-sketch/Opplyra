@@ -14,6 +14,7 @@ import { ApplicationStatusModal } from './components/ApplicationStatusModal';
 import { ApplicationTimelineModal } from './components/ApplicationTimelineModal';
 import { NotificationPreferencesModal } from './components/NotificationPreferencesModal';
 import { PortalLinkErrorModal } from './components/PortalLinkErrorModal';
+import { LogoutConfirmModal } from './components/LogoutConfirmModal';
 
 import { LandingPage } from './pages/LandingPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -62,6 +63,7 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('register');
   const [legalModalState, setLegalModalState] = useState({ isOpen: false, type: 'privacy' });
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Dashboard Navigation State
   const initialTab = () => {
@@ -204,12 +206,17 @@ export default function App() {
     showToast(`Welcome to Opplyra, ${userData.fullName.split(' ')[0]}!`);
   };
 
-  const handleLogout = () => {
+  const handleRequestLogout = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setIsLogoutModalOpen(false);
     localStorage.removeItem('opplyra_auth');
     setIsAuthenticated(false);
     setCurrentUser(null);
     navigateToLanding();
-    showToast('You have been logged out.');
+    showToast('You have been logged out successfully.');
   };
 
   const handleOpenLegal = (type = 'privacy') => {
@@ -560,6 +567,16 @@ export default function App() {
         />
       )}
 
+      {/* Global Logout Confirmation Warning Modal */}
+      {isLogoutModalOpen && (
+        <LogoutConfirmModal
+          isOpen={isLogoutModalOpen}
+          onClose={() => setIsLogoutModalOpen(false)}
+          onConfirm={handleConfirmLogout}
+          user={currentUser || profile}
+        />
+      )}
+
       {/* ======================================================== */}
       {/* VIEW SWITCHER: LANDING PAGE vs AUTHENTICATED DASHBOARD    */}
       {/* ======================================================== */}
@@ -572,7 +589,7 @@ export default function App() {
           onOpenDashboard={() => navigateToApp('dashboard')}
           isAuthenticated={isAuthenticated}
           user={currentUser || profile}
-          onLogout={handleLogout}
+          onLogout={handleRequestLogout}
           onOpenLegal={handleOpenLegal}
         />
       ) : (
@@ -598,7 +615,7 @@ export default function App() {
               setIsSidebarOpen(false);
             }}
             onNavigateToLanding={navigateToLanding}
-            onLogout={handleLogout}
+            onLogout={handleRequestLogout}
             unreadNotificationsCount={unreadNotificationsCount}
           />
 
@@ -691,7 +708,7 @@ export default function App() {
                 <ProfilePage
                   profile={currentUser || profile}
                   onUpdateProfile={handleSaveProfile}
-                  onLogout={handleLogout}
+                  onLogout={handleRequestLogout}
                   showToast={showToast}
                 />
               )}
