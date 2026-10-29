@@ -40,23 +40,28 @@ export function Navbar({
   return (
     <header className="sticky top-0 z-30 bg-[rgba(13,11,19,0.72)] backdrop-blur-2xl border-b border-[rgba(255,255,255,0.12)] px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 text-[#F7F5FC]">
       {/* 1. Left Logo + 2. Center/Left Title Area */}
-      <div className="flex items-center gap-3.5 sm:gap-5 min-w-0 flex-1">
-        {/* Compact Opplyra Brand Logo (Enforced: 96px x 46px) */}
+      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+        {/* Interactive Opplyra Brand Lockup (opens sidebar on hover/click) */}
         <button
           type="button"
           onMouseEnter={onOpenSidebar}
           onMouseLeave={onCloseSidebar}
           onClick={onToggleSidebar}
-          className="navbar-logo-container bg-[#FAF8F2] hover:bg-white border border-white/25 shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 shrink-0"
+          className="flex items-center gap-2.5 px-2 py-1 -ml-1 rounded-xl bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(124,58,237,0.12)] border border-[rgba(255,255,255,0.08)] hover:border-[rgba(167,139,250,0.30)] transition-all duration-200 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/40 shrink-0 group"
           title="Open menu"
           aria-label="Open navigation menu"
         >
           <img
-            src="/logo.png"
-            alt="Opplyra — Opportunities for a Brighter You"
-            className="select-none pointer-events-none"
+            src="/brand-mark.png"
+            alt="Opplyra Emblem"
+            className="w-8 h-8 sm:w-8.5 sm:h-8.5 object-contain drop-shadow-[0_0_12px_rgba(167,139,250,0.5)] transition-transform duration-300 group-hover:scale-105 pointer-events-none"
           />
+          <span className="font-display font-black text-xl sm:text-[22px] tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-[#F3E8FF] to-[#C4B5FD] select-none pointer-events-none">
+            Opplyra
+          </span>
         </button>
+
+        <div className="hidden sm:block h-6 w-px bg-[rgba(255,255,255,0.12)] shrink-0" />
 
         {/* Flexible Page Heading & Subtitle Area */}
         <div className="min-w-0 flex-1">

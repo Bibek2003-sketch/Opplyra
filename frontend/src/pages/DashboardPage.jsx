@@ -117,9 +117,12 @@ export function DashboardPage({
                 </span>
               </div>
 
-              {/* Opplyra Brand Pill inside Hero */}
-              <div className="bg-[#FAF8F2] p-3 rounded-xl border border-white/20 shadow-sm flex items-center justify-center">
-                <img src="/logo.png" alt="Opplyra" className="h-8 w-auto object-contain" />
+              {/* Opplyra Brand Lockup inside Hero */}
+              <div className="p-3 rounded-xl bg-[rgba(14,12,21,0.65)] border border-[rgba(255,255,255,0.12)] shadow-inner flex items-center justify-center gap-2.5 select-none">
+                <img src="/brand-mark.png" alt="Opplyra Emblem" className="w-7 h-7 object-contain drop-shadow-[0_0_10px_rgba(167,139,250,0.5)]" />
+                <span className="font-display font-black text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-[#F3E8FF] to-[#C4B5FD]">
+                  Opplyra
+                </span>
               </div>
 
               <div className="space-y-2 text-xs">

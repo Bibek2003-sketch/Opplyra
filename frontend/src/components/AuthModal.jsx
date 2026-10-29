@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Lock, Mail, User, GraduationCap, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, Lock, Mail, User, GraduationCap, ArrowRight, Sparkles, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { api } from '../api/client';
 
 export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuccess, existingProfile }) {
@@ -8,6 +8,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
   const [mode, setMode] = useState(initialMode); // 'login' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState(existingProfile?.fullName || '');
   const [course, setCourse] = useState(existingProfile?.course || 'B.Tech Computer Science');
   const [academicYear, setAcademicYear] = useState(existingProfile?.academicYear || '3rd Year');
@@ -17,6 +18,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
   useEffect(() => {
     setMode(initialMode);
     setError(null);
+    setShowPassword(false);
   }, [initialMode, isOpen]);
 
   const handleQuickDemoLogin = () => {
@@ -265,13 +267,26 @@ export function AuthModal({ isOpen, onClose, initialMode = 'register', onAuthSuc
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#91899F]" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-9 pr-3.5 py-2.5 glass-input rounded-xl text-[#F7F5FC] font-medium placeholder-[#91899F]"
+                className="w-full pl-9 pr-10 py-2.5 glass-input rounded-xl text-[#F7F5FC] font-medium placeholder-[#91899F]"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#91899F] hover:text-[#F7F5FC] transition-colors p-1 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#7C3AED]/40 cursor-pointer"
+                title={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 

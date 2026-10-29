@@ -51,12 +51,15 @@ export function Sidebar({
         {/* Brand Header & Navigation */}
         <div>
           <div className="p-4 border-b border-[rgba(255,255,255,0.10)] bg-[rgba(14,12,21,0.55)] flex items-center justify-between gap-2">
-            <div className="bg-[#FAF8F2] rounded-2xl p-2.5 border border-white/20 shadow-sm flex items-center justify-center flex-1">
+            <div className="flex items-center gap-2.5 px-2 py-1 select-none">
               <img
-                src="/logo.png"
-                alt="Opplyra — Opportunities for a Brighter You"
-                className="w-full max-h-10 object-contain"
+                src="/brand-mark.png"
+                alt="Opplyra Emblem"
+                className="w-8 h-8 object-contain drop-shadow-[0_0_12px_rgba(167,139,250,0.5)]"
               />
+              <span className="font-display font-black text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-[#F3E8FF] to-[#C4B5FD]">
+                Opplyra
+              </span>
             </div>
             <button
               onClick={onClose}

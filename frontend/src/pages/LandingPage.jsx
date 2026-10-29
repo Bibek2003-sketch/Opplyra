@@ -119,7 +119,7 @@ export function LandingPage({
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-          {/* Left: Opplyra Logo (Transparent background, correctly sized, no rectangle) */}
+          {/* Left: Opplyra Logo + Brand Name */}
           <div className="flex items-center gap-8 shrink-0">
             <a
               href="#"
@@ -127,14 +127,17 @@ export function LandingPage({
                 e.preventDefault();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex items-center select-none group"
+              className="flex items-center gap-2.5 select-none group cursor-pointer"
               aria-label="Opplyra Home"
             >
               <img
-                src="/logo.png"
-                alt="Opplyra — Opportunities for a Brighter You"
-                className="h-7 sm:h-8 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.03]"
+                src="/brand-mark.png"
+                alt="Opplyra Emblem"
+                className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_12px_rgba(167,139,250,0.5)] transition-transform duration-300 group-hover:scale-105"
               />
+              <span className="font-display font-black text-2xl sm:text-[26px] tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-[#F3E8FF] to-[#C4B5FD] select-none">
+                Opplyra
+              </span>
             </a>
 
             {/* Desktop Navigation Links */}
@@ -348,72 +351,86 @@ export function LandingPage({
       {/* ======================================================== */}
       <section className="relative z-10 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto pb-24">
         <div className="relative rounded-3xl border border-[rgba(255,255,255,0.12)] bg-[rgba(14,12,21,0.70)] backdrop-blur-2xl shadow-[0_32px_80px_rgba(0,0,0,0.6)] overflow-hidden">
-          {/* Top Window Bar (Browser Mockup Chrome) */}
-          <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] bg-[rgba(10,8,15,0.8)] flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#FF5F56]/80" />
-              <span className="w-3 h-3 rounded-full bg-[#FFBD2E]/80" />
-              <span className="w-3 h-3 rounded-full bg-[#27C93F]/80" />
+          {/* Top Window Bar (Product Demonstration Frame) */}
+          <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.08)] bg-[rgba(10,8,15,0.85)] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#FF5F56]/80" />
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#FFBD2E]/80" />
+              <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#27C93F]/80" />
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.06)] text-[11px] font-mono text-[#91899F] w-72 justify-center">
-              <Lock className="w-3 h-3 text-[#A78BFA]" />
-              <span>opplyra.app/dashboard</span>
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-1 rounded-lg bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[10px] sm:text-[11px] font-mono font-semibold tracking-wider text-[#C4B5FD] select-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]" />
+              <span>OPPLYRA · STUDENT PORTAL</span>
             </div>
 
-            <div className="flex items-center gap-2 text-[11px] text-[#A78BFA] font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#34D399] animate-pulse" />
-              <span>Live Student Portal</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] text-[#91899F] font-medium shrink-0 select-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]" />
+              <span>Product Preview</span>
             </div>
           </div>
 
           {/* Interactive Feature Showcase Selector */}
-          <div className="p-4 sm:p-6 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(18,15,26,0.4)] flex items-center gap-2 overflow-x-auto">
-            <button
-              onClick={() => setActivePreviewTab('discovery')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activePreviewTab === 'discovery'
-                  ? 'bg-[#7C3AED] text-white shadow-sm'
-                  : 'text-[#B7B0C7] hover:text-white bg-[rgba(255,255,255,0.04)]'
-              }`}
-            >
-              Opportunity Card Preview
-            </button>
-            <button
-              onClick={() => setActivePreviewTab('eligibility')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activePreviewTab === 'eligibility'
-                  ? 'bg-[#7C3AED] text-white shadow-sm'
-                  : 'text-[#B7B0C7] hover:text-white bg-[rgba(255,255,255,0.04)]'
-              }`}
-            >
-              Eligibility Match Summary
-            </button>
-            <button
-              onClick={() => setActivePreviewTab('safety')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                activePreviewTab === 'safety'
-                  ? 'bg-[#7C3AED] text-white shadow-sm'
-                  : 'text-[#B7B0C7] hover:text-white bg-[rgba(255,255,255,0.04)]'
-              }`}
-            >
-              Scam & Safety Verification
-            </button>
+          <div className="p-3.5 sm:p-5 border-b border-[rgba(255,255,255,0.06)] bg-[rgba(18,15,26,0.4)] flex items-center justify-between gap-2 overflow-x-auto">
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                role="tab"
+                aria-selected={activePreviewTab === 'discovery'}
+                onClick={() => setActivePreviewTab('discovery')}
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  activePreviewTab === 'discovery'
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#B7B0C7] hover:text-white bg-[rgba(255,255,255,0.04)]'
+                }`}
+              >
+                Opportunity & Eligibility
+              </button>
+              <button
+                role="tab"
+                aria-selected={activePreviewTab === 'eligibility'}
+                onClick={() => setActivePreviewTab('eligibility')}
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  activePreviewTab === 'eligibility'
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#B7B0C7] hover:text-white bg-[rgba(255,255,255,0.04)]'
+                }`}
+              >
+                Eligibility Breakdown
+              </button>
+              <button
+                role="tab"
+                aria-selected={activePreviewTab === 'safety'}
+                onClick={() => setActivePreviewTab('safety')}
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  activePreviewTab === 'safety'
+                    ? 'bg-[#7C3AED] text-white shadow-sm'
+                    : 'text-[#B7B0C7] hover:text-white bg-[rgba(255,255,255,0.04)]'
+                }`}
+              >
+                Scam & Safety Verification
+              </button>
+            </div>
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[#91899F] px-2.5 py-1 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] shrink-0 hidden md:inline-block select-none">
+              SAMPLE PREVIEW
+            </span>
           </div>
 
           {/* Dashboard Preview Inner Canvas */}
-          <div className="p-5 sm:p-8 space-y-6">
+          <div className="p-4 sm:p-7 space-y-6">
             {activePreviewTab === 'discovery' && (
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 items-start animate-fade-in">
                 {/* Simulated Opportunity Card (7 cols) */}
                 <div className="md:col-span-7 rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[rgba(22,18,31,0.65)] p-5 space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-[#7C3AED]/20 text-[#C4B5FD] border border-[#7C3AED]/35">
                         Internships
                       </span>
                       <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-[#34D399]/15 text-[#34D399] border border-[#34D399]/35">
                         ✓ Matches Profile
+                      </span>
+                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-medium uppercase tracking-wider bg-[rgba(255,255,255,0.05)] text-[#91899F] border border-[rgba(255,255,255,0.08)]">
+                        Sample Preview
                       </span>
                     </div>
                     <span className="text-xs font-semibold text-[#FBBF24] bg-[#FBBF24]/15 px-2 py-0.5 rounded-lg border border-[#FBBF24]/30">
@@ -434,6 +451,33 @@ export function LandingPage({
                   <div className="bg-[rgba(10,8,15,0.5)] p-3 rounded-xl border border-[rgba(255,255,255,0.08)] flex items-center justify-between text-xs">
                     <span className="text-[#91899F]">Monthly Stipend:</span>
                     <span className="font-bold text-[#C4B5FD]">₹75,000 / month + Accommodation</span>
+                  </div>
+
+                  {/* Integrated Eligibility Match Summary */}
+                  <div className="p-3.5 rounded-xl bg-[rgba(10,8,15,0.55)] border border-[rgba(255,255,255,0.08)] space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[#C4B5FD] font-semibold flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#34D399]" />
+                        Eligibility Match Summary
+                      </span>
+                      <span className="text-[10px] font-bold text-[#34D399] bg-[#34D399]/15 px-2 py-0.5 rounded border border-[#34D399]/30">
+                        3 of 3 Criteria Met
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-[11px] text-[#B7B0C7]">
+                      <div className="p-2 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.04)]">
+                        <span className="block text-[10px] text-[#91899F]">Course</span>
+                        <span className="font-medium text-white truncate block">B.Tech / B.E.</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.04)]">
+                        <span className="block text-[10px] text-[#91899F]">Year</span>
+                        <span className="font-medium text-white truncate block">3rd Year</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.04)]">
+                        <span className="block text-[10px] text-[#91899F]">Min CGPA</span>
+                        <span className="font-medium text-white truncate block">7.5+</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="pt-2 flex items-center gap-2">
@@ -462,7 +506,9 @@ export function LandingPage({
                       <Clock className="w-4 h-4 text-[#FBBF24]" />
                       <span className="text-xs font-bold text-white font-display">Upcoming Deadlines</span>
                     </div>
-                    <span className="text-[10px] text-[#A78BFA] font-bold">Auto-sync</span>
+                    <span className="text-[10px] text-[#91899F] font-mono border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-2 py-0.5 rounded">
+                      Sample Schedule
+                    </span>
                   </div>
 
                   <div className="space-y-2.5">
@@ -492,64 +538,77 @@ export function LandingPage({
             )}
 
             {activePreviewTab === 'eligibility' && (
-              <div className="rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[rgba(22,18,31,0.65)] p-6 space-y-4 animate-fade-in">
-                <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-3">
+              <div className="rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[rgba(22,18,31,0.65)] p-5 sm:p-6 space-y-4 animate-fade-in">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-3 gap-2">
                   <div>
-                    <h3 className="text-sm font-bold text-white font-display">
-                      Automated Eligibility Breakdown
-                    </h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-sm font-bold text-white font-display">
+                        Automated Eligibility Breakdown
+                      </h3>
+                      <span className="text-[10px] font-mono text-[#91899F] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-2 py-0.5 rounded">
+                        SAMPLE EVALUATION
+                      </span>
+                    </div>
                     <p className="text-xs text-[#B7B0C7]">
-                      Evaluated against student: Priya Sharma (B.Tech Computer Science, 3rd Year)
+                      Evaluated against illustrative student profile: Priya Sharma (B.Tech Computer Science, 3rd Year)
                     </p>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#34D399]/20 text-[#34D399] border border-[#34D399]/40">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#34D399]/20 text-[#34D399] border border-[#34D399]/40 self-start sm:self-auto">
                     Eligible to Apply
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                  <div className="p-3 rounded-xl bg-[rgba(10,8,15,0.6)] border border-[rgba(255,255,255,0.06)] text-xs space-y-1">
+                  <div className="p-3.5 rounded-xl bg-[rgba(10,8,15,0.6)] border border-[rgba(255,255,255,0.06)] text-xs space-y-1">
                     <span className="text-[#34D399] font-bold text-[11px] block">✓ Course Match</span>
                     <span className="text-white font-medium">B.Tech / B.E. recognized</span>
+                    <span className="text-[10px] text-[#91899F] block">Student's registered degree matches program scope</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-[rgba(10,8,15,0.6)] border border-[rgba(255,255,255,0.06)] text-xs space-y-1">
+                  <div className="p-3.5 rounded-xl bg-[rgba(10,8,15,0.6)] border border-[rgba(255,255,255,0.06)] text-xs space-y-1">
                     <span className="text-[#34D399] font-bold text-[11px] block">✓ Academic Year</span>
                     <span className="text-white font-medium">3rd Year students eligible</span>
+                    <span className="text-[10px] text-[#91899F] block">Penultimate year cohort requirement met</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-[rgba(10,8,15,0.6)] border border-[rgba(255,255,255,0.06)] text-xs space-y-1">
-                    <span className="text-[#FBBF24] font-bold text-[11px] block">? Academic Standing</span>
+                  <div className="p-3.5 rounded-xl bg-[rgba(10,8,15,0.6)] border border-[rgba(255,255,255,0.06)] text-xs space-y-1">
+                    <span className="text-[#34D399] font-bold text-[11px] block">✓ Academic Standing</span>
                     <span className="text-white font-medium">Requires minimum 7.5 CGPA</span>
+                    <span className="text-[10px] text-[#91899F] block">Student profile: 8.4 CGPA satisfies requirement</span>
                   </div>
                 </div>
               </div>
             )}
 
             {activePreviewTab === 'safety' && (
-              <div className="rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[rgba(22,18,31,0.65)] p-6 space-y-4 animate-fade-in">
-                <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-3">
+              <div className="rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[rgba(22,18,31,0.65)] p-5 sm:p-6 space-y-4 animate-fade-in">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-3 gap-2">
                   <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="w-5 h-5 text-[#34D399]" />
+                    <ShieldCheck className="w-5 h-5 text-[#34D399] shrink-0" />
                     <div>
-                      <h3 className="text-sm font-bold text-white font-display">
-                        Deterministic Anti-Fraud Heuristics
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-white font-display">
+                          Deterministic Anti-Fraud Heuristics
+                        </h3>
+                        <span className="text-[10px] font-mono text-[#91899F] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)] px-2 py-0.5 rounded hidden sm:inline-block">
+                          SAMPLE ENGINE
+                        </span>
+                      </div>
                       <p className="text-xs text-[#B7B0C7]">Automated circular screening against common scam signatures</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono text-[#A78BFA] bg-[#7C3AED]/15 px-2.5 py-1 rounded-lg border border-[#7C3AED]/30">
+                  <span className="text-[10px] font-mono text-[#A78BFA] bg-[#7C3AED]/15 px-2.5 py-1 rounded-lg border border-[#7C3AED]/30 self-start sm:self-auto">
                     Rule Engine Active
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  <div className="p-3 rounded-xl bg-[#FB7185]/10 border border-[#FB7185]/30 flex items-start gap-2.5 text-[#F7F5FC]">
+                <div className="space-y-2.5 text-xs">
+                  <div className="p-3.5 rounded-xl bg-[#FB7185]/10 border border-[#FB7185]/30 flex items-start gap-2.5 text-[#F7F5FC]">
                     <AlertTriangle className="w-4 h-4 text-[#FB7185] shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold text-[#FB7185] block">High-Risk Pattern Example (Detected in Circular):</span>
                       <span className="text-[#B7B0C7]">"Selected candidates must send ₹2,500 security deposit via Google Pay before midnight."</span>
                     </div>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#34D399]/10 border border-[#34D399]/30 flex items-start gap-2.5 text-[#F7F5FC]">
+                  <div className="p-3.5 rounded-xl bg-[#34D399]/10 border border-[#34D399]/30 flex items-start gap-2.5 text-[#F7F5FC]">
                     <CheckCircle2 className="w-4 h-4 text-[#34D399] shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold text-[#34D399] block">Verified Government Notice Example:</span>
@@ -561,17 +620,20 @@ export function LandingPage({
             )}
           </div>
 
-          {/* Bottom Caption */}
-          <div className="px-6 py-3 border-t border-[rgba(255,255,255,0.08)] bg-[rgba(10,8,15,0.85)] flex flex-col sm:flex-row sm:items-center justify-between text-xs text-[#91899F] gap-2">
-            <span>Representative product preview. Real opportunities, eligibility, and rules are calculated live.</span>
+          {/* Bottom Caption & Product Action */}
+          <div className="px-4 sm:px-6 py-3.5 border-t border-[rgba(255,255,255,0.08)] bg-[rgba(10,8,15,0.85)] flex flex-col sm:flex-row sm:items-center justify-between text-xs text-[#91899F] gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] shrink-0" />
+              <span>Illustrative sample preview. Opportunity listings, criteria, and deadlines shown here demonstrate platform features; verified data is evaluated dynamically in your student account.</span>
+            </div>
             <button
               onClick={() => {
                 if (isAuthenticated) onOpenDashboard();
                 else onOpenAuth('register');
               }}
-              className="text-[#C4B5FD] hover:text-white font-semibold flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+              className="text-[#C4B5FD] hover:text-white font-semibold flex items-center gap-1.5 cursor-pointer self-start sm:self-auto shrink-0 transition-colors"
             >
-              <span>Explore live app</span>
+              <span>{isAuthenticated ? 'Go to Dashboard' : 'Get Started'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -915,12 +977,15 @@ export function LandingPage({
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-[rgba(255,255,255,0.06)]">
           {/* Brand Info (2 cols) */}
           <div className="md:col-span-2 space-y-4">
-            <a href="#" className="flex items-center select-none">
+            <a href="#" className="inline-flex items-center gap-2.5 select-none group">
               <img
-                src="/logo.png"
-                alt="Opplyra"
-                className="h-7 w-auto object-contain"
+                src="/brand-mark.png"
+                alt="Opplyra Emblem"
+                className="w-7 h-7 object-contain drop-shadow-[0_0_10px_rgba(167,139,250,0.45)] transition-transform duration-300 group-hover:scale-105"
               />
+              <span className="font-display font-black text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-[#F3E8FF] to-[#C4B5FD]">
+                Opplyra
+              </span>
             </a>
             <p className="text-xs text-[#91899F] max-w-sm leading-relaxed">
               Opplyra is a student opportunity platform built for discovering scholarships, internships, competitive examinations, and career programs while keeping track of critical deadlines.

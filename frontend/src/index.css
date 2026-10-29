@@ -34,29 +34,6 @@
 }
 
 /* Abstract Background & Glassmorphism Surfaces */
-.navbar-logo-container {
-  width: 96px !important;
-  height: 46px !important;
-  max-width: 96px !important;
-  max-height: 46px !important;
-  flex: 0 0 96px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 5px 8px !important;
-  overflow: hidden !important;
-  border-radius: 12px !important;
-}
-
-.navbar-logo-container img {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
-}
-
 .app-background-image {
   position: fixed;
   inset: 0;
